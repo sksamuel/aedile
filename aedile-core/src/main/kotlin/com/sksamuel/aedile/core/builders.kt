@@ -7,6 +7,7 @@ import com.github.benmanes.caffeine.cache.RemovalListener
 import com.github.benmanes.caffeine.cache.Weigher
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.asExecutor
 import kotlinx.coroutines.async
 import kotlinx.coroutines.future.asCompletableFuture
@@ -21,10 +22,9 @@ fun caffeineBuilder(): Builder<Any, Any> {
 
 class Builder<K, V>(private val builder: Caffeine<K, V>) {
 
-   private var scope: CoroutineScope? = null
+   private val scope = CoroutineScope(Dispatchers.IO)
 
-   fun on(scope: CoroutineScope): Builder<K, V> {
-      this.scope = scope
+   fun on(dispatcher: CoroutineDispatcher): Builder<K, V> {
       return this
    }
 
@@ -94,7 +94,7 @@ class Builder<K, V>(private val builder: Caffeine<K, V>) {
     *
     */
    fun <K1 : K, V1 : V> buildAsync2(load: suspend (K1) -> V1): AedileAsync<K1, V1> {
-      return AedileAsync(builder.buildAsync { key, _ -> scope!!.async { load(key) }.asCompletableFuture() })
+      return AedileAsync(builder.buildAsync { key, _ -> scope.async { load(key) }.asCompletableFuture() })
    }
 
    /**
@@ -126,7 +126,7 @@ class Builder<K, V>(private val builder: Caffeine<K, V>) {
 
 class AedileAsync<K, V>(private val cache: AsyncCache<K, V>) {
 
-   private var scope: CoroutineScope? = null
+   private val scope = CoroutineScope(Dispatchers.IO)
 
    suspend fun getIfPresent(key: K): V? {
       return cache.getIfPresent(key)?.await()
@@ -144,6 +144,6 @@ class AedileAsync<K, V>(private val cache: AsyncCache<K, V>) {
     * If the suspendable computation throws, the entry will be automatically removed.
     */
    suspend fun foo(key: K, compute: () -> V) {
-      cache.put(key, scope!!.async { compute() }.asCompletableFuture())
+      cache.put(key, scope.async { compute() }.asCompletableFuture())
    }
 }
