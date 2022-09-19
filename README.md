@@ -101,5 +101,7 @@ Aedile provides [Micrometer](https://micrometer.io) integration which simply del
 support. To use this, import the `com.sksamuel.aedile:aedile-micrometer` module, and bind to a micrometer registry:
 
 ```kotlin
-AedileMetrics(cache, "my-cache-name").bindTo(registry)
+CacheMetrics(cache, "my-cache-name").bindTo(registry)
+// or
+LoadingCacheMetrics(cache, "my-cache-name").bindTo(registry)
 ```
