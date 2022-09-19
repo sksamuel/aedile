@@ -21,3 +21,8 @@ val value2 = cache.getOrPut("foo") {
    "bar"
 }
 ```
+
+### Specify Dispatchers
+
+By default, Aedile will use `Dispatchers.IO` for executing the compute functions. You can specify your own
+dispatcher by using `withDispatcher` when configuring the builder.
