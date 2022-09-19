@@ -142,7 +142,7 @@ class AedileAsync<K, V>(private val cache: AsyncCache<K, V>) {
     *
     * If the suspendable computation throws, the entry will be automatically removed.
     */
-   suspend fun foo(key: K, compute: suspend () -> V) {
+   suspend fun put(key: K, compute: suspend () -> V) {
       cache.put(key, scope.async { compute() }.asCompletableFuture())
    }
 }
