@@ -1,9 +1,13 @@
 package com.sksamuel.aedile.core
 
 import com.github.benmanes.caffeine.cache.AsyncCache
-import com.github.benmanes.caffeine.cache.Cache
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.github.benmanes.caffeine.cache.Weigher
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.asExecutor
+import kotlinx.coroutines.async
+import kotlinx.coroutines.future.asCompletableFuture
 import kotlinx.coroutines.future.await
 import java.util.function.Function
 import kotlin.time.Duration
@@ -14,6 +18,13 @@ fun caffeineBuilder(): Builder<Any, Any> {
 }
 
 class Builder<K, V>(private val builder: Caffeine<K, V>) {
+
+   private var scope: CoroutineScope? = null
+
+   fun on(scope: CoroutineScope): Builder<K, V> {
+      this.scope = scope
+      return this
+   }
 
    fun refreshAfterWrite(duration: Duration): Builder<K, V> {
       builder.refreshAfterWrite(duration.toJavaDuration())
@@ -45,34 +56,49 @@ class Builder<K, V>(private val builder: Caffeine<K, V>) {
       return this
    }
 
-   fun withWeakKeys(): Builder<K, V> {
-      builder.weakKeys()
+   /**
+    * Sets the [CoroutineDispatcher] that is used by the loading function.
+    */
+   fun withDispatcher(dispatcher: CoroutineDispatcher): Builder<K, V> {
+      builder.executor(dispatcher.asExecutor())
       return this
    }
 
-   fun withWeakValues(): Builder<K, V> {
-      builder.weakValues()
-      return this
-   }
-
-   fun <K1 : K, V1 : V> build(): Aedile<K1, V1> {
-      return Aedile(builder.build<K1, V1>())
-   }
-
+   /**
+    * Builds a cache which does not automatically load values when keys
+    * are requested unless a mapping function is provided.
+    *
+    * If the asynchronous computation fails or computes a null value then
+    * the entry will be automatically removed.
+    *
+    * Note that multiple threads can concurrently load values for distinct keys.
+    *
+    * Consider buildAsync(CacheLoader) or buildAsync(AsyncCacheLoader) instead,
+    * if it is feasible to implement an CacheLoader or AsyncCacheLoader.
+    *
+    */
    fun <K1 : K, V1 : V> buildAsync(): AedileAsync<K1, V1> {
       return AedileAsync(builder.buildAsync<K1, V1>())
    }
-}
 
-class Aedile<K, V>(private val cache: Cache<K, V>) {
-
-   fun getIfPresent(key: K): V? {
-      return cache.getIfPresent(key)
+   /**
+    * Builds a cache, which either returns a CompletableFuture already loaded
+    * or currently computing the value for a given key, or atomically computes
+    * the value asynchronously through a supplied mapping function or the supplied AsyncCacheLoader.
+    *
+    * If the asynchronous computation fails or computes a null value then the
+    * entry will be automatically removed. Note that multiple threads can
+    * concurrently load values for distinct keys.
+    *
+    */
+   fun <K1 : K, V1 : V> buildAsync2(load: suspend (K1) -> V1): AedileAsync<K1, V1> {
+      return AedileAsync(builder.buildAsync { key, _ -> scope!!.async { load(key) }.asCompletableFuture() })
    }
-
 }
 
 class AedileAsync<K, V>(private val cache: AsyncCache<K, V>) {
+
+   private var scope: CoroutineScope? = null
 
    suspend fun getIfPresent(key: K): V? {
       return cache.getIfPresent(key)?.await()
@@ -80,5 +106,16 @@ class AedileAsync<K, V>(private val cache: AsyncCache<K, V>) {
 
    suspend fun getOrPut(key: K, f: (K) -> V): V? {
       return cache.get(key, Function<K, V> { f(it) })?.await()
+   }
+
+   /**
+    * Associates a computed value with the given [key] in this cache.
+    * If the cache previously contained a value associated with key,
+    * the old value is replaced by the new value.
+    *
+    * If the suspendable computation throws, the entry will be automatically removed.
+    */
+   suspend fun foo(key: K, compute: () -> V) {
+      cache.put(key, scope!!.async { compute() }.asCompletableFuture())
    }
 }

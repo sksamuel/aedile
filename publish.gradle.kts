@@ -57,7 +57,7 @@ publishing {
       from(components["java"])
       pom {
         name.set("aedile")
-        description.set("Caffine Kotlin Wrapper")
+        description.set("Kotlin Cache")
         url.set("http://www.github.com/sksamuel/aedile")
 
         scm {
