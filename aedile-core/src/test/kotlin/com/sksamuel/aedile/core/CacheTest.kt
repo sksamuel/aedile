@@ -8,12 +8,12 @@ class CacheTest : FunSpec() {
    init {
 
       test("Cache should return null for missing keys") {
-         val cache = caffeineBuilder().build<String, String>()
+         val cache = caffeineBuilder<String, String>().build()
          cache.getIfPresent("else") shouldBe null
       }
 
       test("Cache should support suspendable compute function") {
-         val cache = caffeineBuilder().build<String, String>()
+         val cache = caffeineBuilder<String, String>().build()
          cache.getOrPut("foo") {
             delay(1)
             "bar"

@@ -8,7 +8,7 @@ class LoadingCacheTest : FunSpec() {
    init {
 
       test("LoadingCache should use support suspendable loading function") {
-         val cache = caffeineBuilder().build<String, String> {
+         val cache = caffeineBuilder<String, String>().build {
             delay(1)
             "bar"
          }
@@ -16,7 +16,7 @@ class LoadingCacheTest : FunSpec() {
       }
 
       test("LoadingCache should support suspendable put") {
-         val cache = caffeineBuilder().build<String, String> {
+         val cache = caffeineBuilder<String, String>().build {
             delay(1)
             "bar"
          }

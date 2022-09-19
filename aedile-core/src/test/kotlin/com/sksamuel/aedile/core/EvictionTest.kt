@@ -10,11 +10,10 @@ class EvictionTest : FunSpec() {
    init {
       test("cache should support eviction functions") {
          var cause: RemovalCause? = null
-         val cache = caffeineBuilder()
-            .maximumSize(1)
-            .evictionListener { _, _, removalCause ->
-               cause = removalCause
-            }.build<String, String>()
+         val cache = caffeineBuilder<String, String> {
+            maximumSize = 1
+            evictionListener = { _, _, removalCause -> cause = removalCause }
+         }.build()
          repeat(2) { k ->
             cache.put("$k") { "bar" }
          }

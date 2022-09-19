@@ -16,7 +16,9 @@ class CustomDispatcherTest : FunSpec() {
             t
          }.asCoroutineDispatcher()
 
-         val cache = caffeineBuilder().withDispatcher(dispatcher).build<String, String>()
+         val cache = caffeineBuilder<String, String> {
+            this.dispatcher = dispatcher
+         }.build()
          cache.getOrPut("foo") {
             Thread.currentThread().name shouldContain "mcthreadface"
             "bar"

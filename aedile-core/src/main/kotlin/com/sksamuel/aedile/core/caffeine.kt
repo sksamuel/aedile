@@ -4,8 +4,6 @@ import com.github.benmanes.caffeine.cache.AsyncCache
 import com.github.benmanes.caffeine.cache.AsyncLoadingCache
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.github.benmanes.caffeine.cache.RemovalCause
-import com.github.benmanes.caffeine.cache.RemovalListener
-import com.github.benmanes.caffeine.cache.Weigher
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
@@ -16,83 +14,25 @@ import kotlinx.coroutines.future.await
 import kotlin.time.Duration
 import kotlin.time.toJavaDuration
 
-/**
- * Creates a [Builder] which by default uses [Dispatchers.IO] to execute computation functions.
- */
-fun caffeineBuilder(): Builder<Any, Any> {
-   return Builder(Caffeine.newBuilder())
-}
-
-class Builder<K, V>(private val builder: Caffeine<K, V>) {
-
-   private var scope = createScope(Dispatchers.IO)
-
-   private fun createScope(dispatcher: CoroutineDispatcher): CoroutineScope {
-      return CoroutineScope(dispatcher + CoroutineName("Aedile-Caffeine-Scope"))
-   }
+data class Configuration<K, V>(
 
    /**
     * Sets the [CoroutineDispatcher] that is used when executing loading functions.
     */
-   fun withDispatcher(dispatcher: CoroutineDispatcher): Builder<K, V> {
-      scope = createScope(dispatcher)
-      return this
-   }
+   var dispatcher: CoroutineDispatcher = Dispatchers.IO,
 
-   fun refreshAfterWrite(duration: Duration): Builder<K, V> {
-      builder.refreshAfterWrite(duration.toJavaDuration())
-      return this
-   }
+   var refreshAfterWrite: Duration? = null,
+   var expireAfterAccess: Duration? = null,
+   var expireAfterWrite: Duration? = null,
 
-   fun expireAfterAccess(duration: Duration): Builder<K, V> {
-      builder.expireAfterAccess(duration.toJavaDuration())
-      return this
-   }
-
-   fun expireAfterWrite(duration: Duration): Builder<K, V> {
-      builder.expireAfterWrite(duration.toJavaDuration())
-      return this
-   }
-
-   fun maximumWeight(maximumWeight: Long): Builder<K, V> {
-      builder.maximumWeight(maximumWeight)
-      return this
-   }
-
-   fun <K1 : K, V1 : V> maximumWeight(weigher: (K1, V1) -> Int): Builder<K, V> {
-      builder.weigher(Weigher<K1, V1> { key, value -> weigher(key, value) })
-      return this
-   }
-
-   fun maximumSize(maximumSize: Long): Builder<K, V> {
-      builder.maximumSize(maximumSize)
-      return this
-   }
+   var maximumWeight: Long? = null,
+   var maximumSize: Long? = null,
 
    /**
     * Specifies a nanosecond-precision time source for use in determining when entries
     * should be expired or refreshed. By default, System.nanoTime is used.
-    *
-    * @param nano returns the current nanosecond value to use.
     */
-   fun ticker(nano: () -> Long): Builder<K, V> {
-      builder.ticker { nano() }
-      return this
-   }
-
-   /**
-    * Sets the minimum total size for the internal data structures.
-    *
-    * Providing a large enough estimate at construction time avoids the
-    * need for expensive resizing operations later,
-    * but setting this value unnecessarily high wastes memory.
-    *
-    * @param initialCapacity the minimum and starting size of the cache.
-    */
-   fun initialCapacity(initialCapacity: Int): Builder<K, V> {
-      builder.initialCapacity(initialCapacity)
-      return this
-   }
+   var ticker: (() -> Long)? = null,
 
    /**
     * Specifies a listener that is notified each time an entry is evicted.
@@ -100,13 +40,48 @@ class Builder<K, V>(private val builder: Caffeine<K, V>) {
     * The cache will invoke this listener during the atomic operation to remove the entry.
     * In the case of expiration or reference collection, the entry may be pending removal
     * and will be discarded as part of the routine maintenance.
-    *
-    * @param listener the listener to invoke with the key, value and cause.
     */
-   fun evictionListener(listener: (K?, V?, RemovalCause) -> Unit): Builder<K, V> {
-      builder.evictionListener(RemovalListener<K, V> { key, value, cause -> listener(key, value, cause) })
-      return this
-   }
+   var evictionListener: (K?, V?, RemovalCause) -> Unit = { _, _, _ -> },
+
+   /**
+    * Sets the minimum total size for the internal data structures.
+    *
+    * Providing a large enough estimate at construction time avoids the
+    * need for expensive resizing operations later,
+    * but setting this value unnecessarily high wastes memory.
+    */
+   var initialCapacity: Int? = null,
+
+   var weigher: ((K, V) -> Int)? = null,
+)
+
+/**
+ * Creates a [Builder] which by default uses [Dispatchers.IO] to execute computation functions.
+ */
+fun <K, V> caffeineBuilder(configure: Configuration<K, V>.() -> Unit = {}): Builder<K, V> {
+
+   val c = Configuration<K, V>()
+   c.configure()
+   val caffeine = Caffeine.newBuilder()
+
+   c.evictionListener.let { caffeine.evictionListener(it) }
+   c.maximumSize?.let { caffeine.maximumSize(it) }
+   c.maximumWeight?.let { caffeine.maximumWeight(it) }
+   c.initialCapacity?.let { caffeine.initialCapacity(it) }
+   c.weigher?.let { caffeine.weigher(it) }
+   c.ticker?.let { caffeine.ticker(it) }
+   c.expireAfterWrite?.let { caffeine.expireAfterWrite(it.toJavaDuration()) }
+   c.expireAfterAccess?.let { caffeine.expireAfterAccess(it.toJavaDuration()) }
+   c.refreshAfterWrite?.let { caffeine.refreshAfterWrite(it.toJavaDuration()) }
+
+   val scope = CoroutineScope(c.dispatcher + CoroutineName("Aedile-Caffeine-Scope"))
+   return Builder(scope, caffeine)
+}
+
+class Builder<K, V>(
+   private val scope: CoroutineScope,
+   private val caffeine: Caffeine<Any, Any>,
+) {
 
    /**
     * Returns a [Cache] which suspends when requesting values.
@@ -117,8 +92,8 @@ class Builder<K, V>(private val builder: Caffeine<K, V>) {
     * If the suspendable computation throws or computes a null value then the
     * entry will be automatically removed.
     */
-   fun <K1 : K, V1 : V> build(): Cache<K1, V1> {
-      return Cache(scope, builder.buildAsync())
+   fun build(): Cache<K, V> {
+      return Cache(scope, caffeine.buildAsync())
    }
 
    /**
@@ -131,8 +106,8 @@ class Builder<K, V>(private val builder: Caffeine<K, V>) {
     * entry will be automatically removed.
     *
     */
-   fun <K1 : K, V1 : V> build(compute: suspend (K1) -> V1): LoadingCache<K1, V1> {
-      return LoadingCache(scope, builder.buildAsync { key, _ -> scope.async { compute(key) }.asCompletableFuture() })
+   fun build(compute: suspend (K) -> V): LoadingCache<K, V> {
+      return LoadingCache(scope, caffeine.buildAsync { key, _ -> scope.async { compute(key) }.asCompletableFuture() })
    }
 }
 
