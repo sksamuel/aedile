@@ -1,2 +1,3 @@
 # aedile
-Kotlin Cache Wrapper for Caffeine
+
+A simple Kotlin Wrapper for [Caffeine](https://github.com/ben-manes/caffeine).
