@@ -6,6 +6,7 @@ import com.github.benmanes.caffeine.cache.RemovalCause
 import com.github.benmanes.caffeine.cache.RemovalListener
 import com.github.benmanes.caffeine.cache.Weigher
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.asExecutor
@@ -21,9 +22,14 @@ fun caffeineBuilder(): Builder<Any, Any> {
 
 class Builder<K, V>(private val builder: Caffeine<K, V>) {
 
-   private val scope = CoroutineScope(Dispatchers.IO)
+   private var scope = createScope(Dispatchers.IO)
+
+   private fun createScope(dispatcher: CoroutineDispatcher): CoroutineScope {
+      return CoroutineScope(dispatcher + CoroutineName("Aedile-Caffeine-Scope"))
+   }
 
    fun on(dispatcher: CoroutineDispatcher): Builder<K, V> {
+      scope = createScope(dispatcher)
       return this
    }
 
@@ -79,7 +85,7 @@ class Builder<K, V>(private val builder: Caffeine<K, V>) {
     *
     */
    fun <K1 : K, V1 : V> buildAsync(): AedileAsync<K1, V1> {
-      return AedileAsync(builder.buildAsync<K1, V1>())
+      return AedileAsync(scope, builder.buildAsync<K1, V1>())
    }
 
    /**
@@ -93,7 +99,7 @@ class Builder<K, V>(private val builder: Caffeine<K, V>) {
     *
     */
    fun <K1 : K, V1 : V> buildAsync2(load: suspend (K1) -> V1): AedileAsync<K1, V1> {
-      return AedileAsync(builder.buildAsync { key, _ -> scope.async { load(key) }.asCompletableFuture() })
+      return AedileAsync(scope, builder.buildAsync { key, _ -> scope.async { load(key) }.asCompletableFuture() })
    }
 
    /**
@@ -123,9 +129,7 @@ class Builder<K, V>(private val builder: Caffeine<K, V>) {
    }
 }
 
-class AedileAsync<K, V>(private val cache: AsyncCache<K, V>) {
-
-   private val scope = CoroutineScope(Dispatchers.IO)
+class AedileAsync<K, V>(private val scope: CoroutineScope, private val cache: AsyncCache<K, V>) {
 
    suspend fun getIfPresent(key: K): V? {
       return cache.getIfPresent(key)?.await()
