@@ -15,7 +15,7 @@ buildscript {
 plugins {
    signing
    `maven-publish`
-   kotlin("jvm").version("1.7.10")
+   kotlin("jvm")
 }
 
 allprojects {
@@ -33,15 +33,14 @@ allprojects {
    }
 
    dependencies {
-      implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
-      implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.6.4")
-      implementation("com.sksamuel.tabby:tabby-fp:2.0.34")
-      api("com.github.ben-manes.caffeine:caffeine:3.1.1")
+      implementation(KotlinX.coroutines.core)
+      implementation(KotlinX.coroutines.jdk8)
+      implementation("com.sksamuel.tabby:tabby-fp:_")
 
-      testImplementation("io.kotest:kotest-framework-datatest:5.4.2")
-      testImplementation("io.kotest:kotest-runner-junit5:5.4.2")
-      testImplementation("io.kotest:kotest-assertions-core:5.4.2")
-      testImplementation("io.kotest:kotest-property:5.4.2")
+      testImplementation(Testing.kotest.framework.datatest)
+      testImplementation(Testing.kotest.runner.junit5)
+      testImplementation(Testing.kotest.assertions.core)
+      testImplementation(Testing.kotest.property)
    }
 
    tasks.named<Test>("test") {

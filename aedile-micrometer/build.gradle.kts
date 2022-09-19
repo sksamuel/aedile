@@ -1,6 +1,6 @@
 dependencies {
    api(project(":aedile-core"))
-   api("io.micrometer:micrometer-core:1.9.4")
+   api("io.micrometer:micrometer-core:_")
 }
 
 apply("../publish.gradle.kts")
