@@ -38,5 +38,22 @@ class CacheTest : FunSpec() {
             mapOf("baz" to "wubble")
          } shouldBe mapOf("foo" to "wobble", "bar" to "wibble", "baz" to "wubble")
       }
+
+
+      test("Cache should support asMap") {
+         val cache = caffeineBuilder<String, String>().build {
+            delay(1)
+            "bar"
+         }
+         cache.put("foo") {
+            delay(1)
+            "wobble"
+         }
+         cache.put("bar") {
+            delay(1)
+            "wibble"
+         }
+         cache.asMap() shouldBe mapOf("foo" to "wobble", "bar" to "wibble")
+      }
    }
 }
