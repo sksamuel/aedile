@@ -1,6 +1,7 @@
 package com.sksamuel.aedile.core
 
 import com.github.benmanes.caffeine.cache.AsyncCache
+import com.github.benmanes.caffeine.cache.AsyncLoadingCache
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.github.benmanes.caffeine.cache.RemovalCause
 import com.github.benmanes.caffeine.cache.RemovalListener
@@ -9,7 +10,6 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.asExecutor
 import kotlinx.coroutines.async
 import kotlinx.coroutines.future.asCompletableFuture
 import kotlinx.coroutines.future.await
@@ -28,7 +28,10 @@ class Builder<K, V>(private val builder: Caffeine<K, V>) {
       return CoroutineScope(dispatcher + CoroutineName("Aedile-Caffeine-Scope"))
    }
 
-   fun on(dispatcher: CoroutineDispatcher): Builder<K, V> {
+   /**
+    * Sets the [CoroutineDispatcher] that is used when executing loading functions.
+    */
+   fun withDispatcher(dispatcher: CoroutineDispatcher): Builder<K, V> {
       scope = createScope(dispatcher)
       return this
    }
@@ -64,50 +67,13 @@ class Builder<K, V>(private val builder: Caffeine<K, V>) {
    }
 
    /**
-    * Sets the [CoroutineDispatcher] that is used by the loading function.
-    */
-   fun withDispatcher(dispatcher: CoroutineDispatcher): Builder<K, V> {
-      builder.executor(dispatcher.asExecutor())
-      return this
-   }
-
-   /**
-    * Builds a cache which does not automatically load values when keys
-    * are requested unless a mapping function is provided.
-    *
-    * If the asynchronous computation fails or computes a null value then
-    * the entry will be automatically removed.
-    *
-    * Note that multiple threads can concurrently load values for distinct keys.
-    *
-    * Consider buildAsync(CacheLoader) or buildAsync(AsyncCacheLoader) instead,
-    * if it is feasible to implement an CacheLoader or AsyncCacheLoader.
-    *
-    */
-   fun <K1 : K, V1 : V> buildAsync(): AedileAsync<K1, V1> {
-      return AedileAsync(scope, builder.buildAsync<K1, V1>())
-   }
-
-   /**
-    * Builds a cache, which either returns a CompletableFuture already loaded
-    * or currently computing the value for a given key, or atomically computes
-    * the value asynchronously through a supplied mapping function or the supplied AsyncCacheLoader.
-    *
-    * If the asynchronous computation fails or computes a null value then the
-    * entry will be automatically removed. Note that multiple threads can
-    * concurrently load values for distinct keys.
-    *
-    */
-   fun <K1 : K, V1 : V> buildAsync2(load: suspend (K1) -> V1): AedileAsync<K1, V1> {
-      return AedileAsync(scope, builder.buildAsync { key, _ -> scope.async { load(key) }.asCompletableFuture() })
-   }
-
-   /**
     * Specifies a nanosecond-precision time source for use in determining when entries
     * should be expired or refreshed. By default, System.nanoTime is used.
+    *
+    * @param nano returns the current nanosecond value to use.
     */
-   fun ticker(f: () -> Long): Builder<K, V> {
-      builder.ticker { f() }
+   fun ticker(nano: () -> Long): Builder<K, V> {
+      builder.ticker { nano() }
       return this
    }
 
@@ -117,34 +83,88 @@ class Builder<K, V>(private val builder: Caffeine<K, V>) {
     * Providing a large enough estimate at construction time avoids the
     * need for expensive resizing operations later,
     * but setting this value unnecessarily high wastes memory.
+    *
+    * @param initialCapacity the minimum and starting size of the cache.
     */
    fun initialCapacity(initialCapacity: Int): Builder<K, V> {
       builder.initialCapacity(initialCapacity)
       return this
    }
 
+   /**
+    * Specifies a listener that is notified each time an entry is evicted.
+    *
+    * The cache will invoke this listener during the atomic operation to remove the entry.
+    * In the case of expiration or reference collection, the entry may be pending removal
+    * and will be discarded as part of the routine maintenance.
+    *
+    * @param listener the listener to invoke with the key, value and cause.
+    */
    fun evictionListener(listener: (K?, V?, RemovalCause) -> Unit): Builder<K, V> {
       builder.evictionListener(RemovalListener<K, V> { key, value, cause -> listener(key, value, cause) })
       return this
    }
+
+   /**
+    * Returns a [Cache] which suspends when requesting values.
+    *
+    * If the key is not present in the cache, returns null, unless a compute function
+    * is provided with the key.
+    *
+    * If the suspendable computation throws or computes a null value then the
+    * entry will be automatically removed.
+    */
+   fun <K1 : K, V1 : V> build(): Cache<K1, V1> {
+      return Cache(scope, builder.buildAsync())
+   }
+
+   /**
+    * Returns a [Cache] which suspends when requesting values.
+    *
+    * If the key does not exist, then the suspendable [compute] function is invoked
+    * to compute a value, unless a specific compute has been provided with the key.
+    *
+    * If the suspendable computation throws or computes a null value then the
+    * entry will be automatically removed.
+    *
+    */
+   fun <K1 : K, V1 : V> build(compute: suspend (K1) -> V1): LoadingCache<K1, V1> {
+      return LoadingCache(scope, builder.buildAsync { key, _ -> scope.async { compute(key) }.asCompletableFuture() })
+   }
 }
 
-class AedileAsync<K, V>(private val scope: CoroutineScope, private val cache: AsyncCache<K, V>) {
+class Cache<K, V>(private val scope: CoroutineScope, private val cache: AsyncCache<K, V>) {
 
    suspend fun getIfPresent(key: K): V? {
       return cache.getIfPresent(key)?.await()
    }
 
+   /**
+    * Returns the value associated with key in this cache, obtaining that value from the
+    * [compute] function if necessary. This method provides a simple substitute for the conventional
+    * "if cached, return; otherwise create, cache and return" pattern.
+    *
+    * The instance returned from the compute function will be stored directly into the cache.
+    *
+    * If the specified key is not already associated with a value, attempts to compute its value
+    * and enters it into this cache unless null.
+    *
+    * If the suspendable computation throws, the entry will be automatically removed from this cache.
+    */
    suspend fun getOrPut(key: K, compute: suspend (K) -> V): V {
       return cache.get(key) { k, _ -> scope.async { compute(k) }.asCompletableFuture() }.await()
    }
 
    /**
     * Associates a computed value with the given [key] in this cache.
+    *
     * If the cache previously contained a value associated with key,
     * the old value is replaced by the new value.
     *
     * If the suspendable computation throws, the entry will be automatically removed.
+    *
+    * @param key the key to associate the computed value with
+    * @param compute the suspendable function that generate the value.
     */
    suspend fun put(key: K, compute: suspend () -> V) {
       cache.put(key, scope.async { compute() }.asCompletableFuture())
@@ -154,3 +174,46 @@ class AedileAsync<K, V>(private val scope: CoroutineScope, private val cache: As
       return cache.asMap().mapValues { it.value.await() }
    }
 }
+
+class LoadingCache<K, V>(private val scope: CoroutineScope, private val cache: AsyncLoadingCache<K, V>) {
+
+   suspend fun getIfPresent(key: K): V? {
+      return cache.getIfPresent(key)?.await()
+   }
+
+   /**
+    * Returns the value associated with key in this cache, obtaining that value from the
+    * [compute] function if necessary. This method provides a simple substitute for the conventional
+    * "if cached, return; otherwise create, cache and return" pattern.
+    *
+    * The instance returned from the compute function will be stored directly into the cache.
+    *
+    * If the specified key is not already associated with a value, attempts to compute its value
+    * and enters it into this cache unless null.
+    *
+    * If the suspendable computation throws, the entry will be automatically removed from this cache.
+    */
+   suspend fun getOrPut(key: K, compute: suspend (K) -> V): V {
+      return cache.get(key) { k, _ -> scope.async { compute(k) }.asCompletableFuture() }.await()
+   }
+
+   /**
+    * Associates a computed value with the given [key] in this cache.
+    *
+    * If the cache previously contained a value associated with key,
+    * the old value is replaced by the new value.
+    *
+    * If the suspendable computation throws, the entry will be automatically removed.
+    *
+    * @param key the key to associate the computed value with
+    * @param compute the suspendable function that generate the value.
+    */
+   suspend fun put(key: K, compute: suspend () -> V) {
+      cache.put(key, scope.async { compute() }.asCompletableFuture())
+   }
+
+   suspend fun asMap(): Map<K, V> {
+      return cache.asMap().mapValues { it.value.await() }
+   }
+}
+
