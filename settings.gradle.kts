@@ -16,3 +16,8 @@ refreshVersions {
       candidate.stabilityLevel != de.fayard.refreshVersions.core.StabilityLevel.Stable
    }
 }
+
+include(
+   "aedile-core",
+	"aedile-caffeine",
+)

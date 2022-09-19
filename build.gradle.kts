@@ -54,3 +54,5 @@ tasks.named<Test>("test") {
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
    kotlinOptions.jvmTarget = "11"
 }
+
+apply("./publish.gradle.kts")
