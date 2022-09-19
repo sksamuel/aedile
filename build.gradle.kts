@@ -18,11 +18,11 @@ plugins {
    kotlin("jvm").version("1.7.10")
 }
 
-group = "com.sksamuel.aedile"
-version = Ci.version
-
 allprojects {
    apply(plugin = "org.jetbrains.kotlin.jvm")
+
+   group = "com.sksamuel.aedile"
+   version = Ci.version
 
    repositories {
       mavenLocal()
