@@ -16,6 +16,9 @@ import kotlinx.coroutines.future.await
 import kotlin.time.Duration
 import kotlin.time.toJavaDuration
 
+/**
+ * Creates a [Builder] which by default uses [Dispatchers.IO] to execute computation functions.
+ */
 fun caffeineBuilder(): Builder<Any, Any> {
    return Builder(Caffeine.newBuilder())
 }
@@ -149,7 +152,12 @@ class Cache<K, V>(private val scope: CoroutineScope, private val cache: AsyncCac
     * If the specified key is not already associated with a value, attempts to compute its value
     * and enters it into this cache unless null.
     *
-    * If the suspendable computation throws, the entry will be automatically removed from this cache.
+    * If the suspendable computation throws, the exception will be propagated to the caller.
+    *
+    * @param key the key to lookup in the cache
+    * @param compute the suspendable function to generate a value for the given key.
+    * @return the present value, the computed value, or throws.
+    *
     */
    suspend fun getOrPut(key: K, compute: suspend (K) -> V): V {
       return cache.get(key) { k, _ -> scope.async { compute(k) }.asCompletableFuture() }.await()
