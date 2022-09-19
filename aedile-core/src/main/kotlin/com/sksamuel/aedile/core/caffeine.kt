@@ -182,6 +182,21 @@ class LoadingCache<K, V>(private val scope: CoroutineScope, private val cache: A
    }
 
    /**
+    * Returns the value associated with key in this cache, suspending while that value is computed
+    * if necessary. If the computation throws, the entry will be automatically removed from this cache.
+    *
+    * @param key the key to lookup in the cache
+    * @return the value in the cache or computed from the global loading function.
+    */
+   suspend fun get(key: K): V {
+      return cache.get(key).await()
+   }
+
+   suspend fun getAll(keys: Collection<K>): Map<K, V>? {
+      return cache.getAll(keys).await()
+   }
+
+   /**
     * Returns the value associated with key in this cache, obtaining that value from the
     * [compute] function if necessary. This method provides a simple substitute for the conventional
     * "if cached, return; otherwise create, cache and return" pattern.
