@@ -19,5 +19,24 @@ class CacheTest : FunSpec() {
             "bar"
          } shouldBe "bar"
       }
+
+      test("Cache should support getAll") {
+         val cache = caffeineBuilder<String, String>().build()
+         cache.put("foo") {
+            delay(1)
+            "wobble"
+         }
+         cache.put("bar") {
+            delay(1)
+            "wibble"
+         }
+         cache.put("baz") {
+            delay(1)
+            "wubble"
+         }
+         cache.getAll(listOf("foo", "bar", "baz")) {
+            mapOf("baz" to "wubble")
+         } shouldBe mapOf("foo" to "wobble", "bar" to "wibble", "baz" to "wubble")
+      }
    }
 }

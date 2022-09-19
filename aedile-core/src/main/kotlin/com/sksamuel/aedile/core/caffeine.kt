@@ -11,6 +11,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.future.asCompletableFuture
 import kotlinx.coroutines.future.await
+import java.util.concurrent.Executor
 import kotlin.time.Duration
 import kotlin.time.toJavaDuration
 
@@ -158,6 +159,14 @@ class Cache<K, V>(private val scope: CoroutineScope, private val cache: AsyncCac
    suspend fun asMap(): Map<K, V> {
       return cache.asMap().mapValues { it.value.await() }
    }
+
+   suspend fun getAll(keys: Collection<K>, compute: suspend (Collection<K>) -> Map<K, V>): Map<K, V> {
+      return cache.getAll(
+         keys
+      ) { ks: Set<K>, _: Executor ->
+         scope.async { compute(ks) }.asCompletableFuture()
+      }.await()
+   }
 }
 
 class LoadingCache<K, V>(private val scope: CoroutineScope, private val cache: AsyncLoadingCache<K, V>) {
@@ -179,7 +188,7 @@ class LoadingCache<K, V>(private val scope: CoroutineScope, private val cache: A
       return cache.get(key).await()
    }
 
-   suspend fun getAll(keys: Collection<K>): Map<K, V>? {
+   suspend fun getAll(keys: Collection<K>): Map<K, V> {
       return cache.getAll(keys).await()
    }
 
