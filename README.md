@@ -72,6 +72,16 @@ val cache = caffeineBuilder<String, String> {
 }.build()
 ```
 
+## Evictions
+
+Caffeine provides different approaches to timed eviction:
+
+* expireAfterAccess(duration): Expire entries after the specified duration has passed since the entry was last accessed
+  by a read or a write. This could be desirable if the cached data is bound to a session and expires due to inactivity.
+
+* expireAfterWrite(duration): Expire entries after the specified duration has passed since the entry was created, or the
+  most recent replacement of the value. This could be desirable if cached data grows stale after a certain amount of
+  time.
 
 ## Specify Dispatchers
 
