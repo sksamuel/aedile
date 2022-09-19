@@ -31,7 +31,7 @@ Next, in your code, create a cache through the cahce builder with the `caffeineB
 supplying the key / value types.
 
 ```kotlin
-val cache = caffeineBuilder().build<String, String>()
+val cache = caffeineBuilder<String, String>().build()
 ```
 
 With this cache we can request values if present, or supply a suspendable function to compute them.
@@ -48,7 +48,7 @@ val value2 = cache.getOrPut("foo") {
 The build function supports a generic compute function which is used if no specific compute function is provided.
 
 ```kotlin
-val cache = caffeineBuilder().build<String, String> {
+val cache = caffeineBuilder<String, String>().build {
    delay(1)
    "value"
 }
@@ -57,6 +57,22 @@ cache.get("foo") // uses default compute
 cache.get("bar") { "other" } // uses specific compute function
 ```
 
+## Configuration
+
+When creating the cache, Aedile supports most Caffeine configuration options. The exception is `weakKeys`
+and `weakValues` which are not supported with asynchronous operations. Since Aedile's purpose is to support coroutines,
+these options are ignored.
+
+To configure the builder we supply a configuration lambda:
+
+```kotlin
+val cache = caffeineBuilder<String, String> {
+   maximumSize = 100
+   initialCapacity = 10
+}.build()
+```
+
+
 ## Specify Dispatchers
 
 By default, Aedile will use `Dispatchers.IO` for executing the compute functions. You can specify your own
@@ -64,7 +80,9 @@ dispatcher by using `withDispatcher` when configuring the builder.
 
 ```kotlin
 val cacheDispatcher = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
-val cache = caffeineBuilder().withDispatcher(cacheDispatcher).build<String, String>()
+val cache = caffeineBuilder<String, String>() {
+   this.dispatcher = cacheDispatcher
+}.build()
 ```
 
 ## Metrics
@@ -74,19 +92,4 @@ support. To use this, import the `com.sksamuel.aedile:aedile-micrometer` module,
 
 ```kotlin
 AedileMetrics(cache, "my-cache-name").bindTo(registry)
-```
-
-## Configuration
-
-When creating the cache, Aedile supports most Caffeine configuration options. The exception is `weakKeys`
-and `weakValues` which are not supported with asynchronous operations. Since Aedile's purpose is to support coroutines,
-these options are ignored.
-
-For example, to configure the builder:
-
-```kotlin
-val cache = caffeineBuilder()
-   .maximumSize(100)
-   .initialCapacity(10)
-   .build<String, String>()
 ```
