@@ -162,7 +162,7 @@ class Cache<K, V>(private val scope: CoroutineScope, private val cache: AsyncCac
 
 class LoadingCache<K, V>(private val scope: CoroutineScope, private val cache: AsyncLoadingCache<K, V>) {
 
-   fun underlying() = cache
+   fun underlying(): AsyncLoadingCache<K, V> = cache
 
    suspend fun getIfPresent(key: K): V? {
       return cache.getIfPresent(key)?.await()
