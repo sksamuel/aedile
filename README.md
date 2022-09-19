@@ -1,7 +1,21 @@
 # aedile
 
-A simple Kotlin wrapper for [Caffeine](https://github.com/ben-manes/caffeine) which prefers coroutines rather than Java
+![main](https://github.com/sksamuel/aedile/workflows/main/badge.svg)
+[<img src="https://img.shields.io/maven-central/v/com.sksamuel.aedile/aedile.svg?label=latest%20release"/>](http://search.maven.org/#search%7Cga%7C1%aedile)
+[<img src="https://img.shields.io/nexus/s/https/oss.sonatype.org/com.sksamuel.aedile/aedile.svg?label=latest%20snapshot&style=plastic"/>](https://oss.sonatype.org/content/repositories/snapshots/com/sksamuel/aedile/)
+
+Cohort is a simple Kotlin wrapper for [Caffeine](https://github.com/ben-manes/caffeine) which prefers coroutines rather
+than Java
 futures.
+
+See [changelog](changelog.md)
+
+## Features
+
+* **Suspendable functions:** Rather than use Java's `CompletableFuture`s, all operations on Aedile are suspendable and
+  executed in their own coroutines.
+* **Backed by Caffeine:** This is not a new cache implementation with its own bugs and quirks, but a simple wrapper
+  around Caffeine which has been used on the JVM for years.
 
 ## Usage
 
