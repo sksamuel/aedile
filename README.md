@@ -51,3 +51,8 @@ cache.get("bar") { "other" } // uses specific compute function
 
 By default, Aedile will use `Dispatchers.IO` for executing the compute functions. You can specify your own
 dispatcher by using `withDispatcher` when configuring the builder.
+
+```kotlin
+val cacheDispatcher = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
+val cache = caffeineBuilder().withDispatcher(cacheDispatcher).build<String, String>()
+```
