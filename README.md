@@ -15,10 +15,20 @@ See [changelog](changelog.md)
   executed in their own coroutines.
 * **Backed by Caffeine:** This is not a new cache implementation with its own bugs and quirks, but a simple wrapper
   around Caffeine which has been used on the JVM for years.
+* **Kotlin duration:** Specify expiration and refresh times in `kotlin.time.Duration` rather than Java durations.
+* **Kotlin functions:** Whereever a function is required - eg eviction listener - Aedile supports Kotlin functions
+  rather than Java's Function interface.
 
 ## Usage
 
-Create cache builder with the `caffeineBuilder()` function, supplying the key / value types.
+Add Aedile to your build:
+
+```groovy
+implementation 'com.sksamuel.aedile:aedile-core:<version>'
+```
+
+Next, in your code, create a cache through the cahce builder with the `caffeineBuilder()` function,
+supplying the key / value types.
 
 ```kotlin
 val cache = caffeineBuilder().build<String, String>()
@@ -57,7 +67,6 @@ val cacheDispatcher = Executors.newSingleThreadExecutor().asCoroutineDispatcher(
 val cache = caffeineBuilder().withDispatcher(cacheDispatcher).build<String, String>()
 ```
 
-
 ## Metrics
 
 Aedile provides [Micrometer](https://micrometer.io) integration which simply delegates to the Caffeine micrometer
@@ -65,4 +74,19 @@ support. To use this, import the `com.sksamuel.aedile:aedile-micrometer` module,
 
 ```kotlin
 AedileMetrics(cache, "my-cache-name").bindTo(registry)
+```
+
+## Configuration
+
+When creating the cache, Aedile supports most Caffeine configuration options. The exception is `weakKeys`
+and `weakValues` which are not supported with asynchronous operations. Since Aedile's purpose is to support coroutines,
+these options are ignored.
+
+For example, to configure the builder:
+
+```kotlin
+val cache = caffeineBuilder()
+   .maximumSize(100)
+   .initialCapacity(10)
+   .build<String, String>()
 ```
