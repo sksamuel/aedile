@@ -47,7 +47,7 @@ cache.get("foo") // uses default compute
 cache.get("bar") { "other" } // uses specific compute function
 ```
 
-### Specify Dispatchers
+## Specify Dispatchers
 
 By default, Aedile will use `Dispatchers.IO` for executing the compute functions. You can specify your own
 dispatcher by using `withDispatcher` when configuring the builder.
@@ -55,4 +55,14 @@ dispatcher by using `withDispatcher` when configuring the builder.
 ```kotlin
 val cacheDispatcher = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
 val cache = caffeineBuilder().withDispatcher(cacheDispatcher).build<String, String>()
+```
+
+
+## Metrics
+
+Aedile provides [Micrometer](https://micrometer.io) integration which simply delegates to the Caffeine micrometer
+support. To use this, import the `com.sksamuel.aedile:aedile-micrometer` module, and bind to a micrometer registry:
+
+```kotlin
+AedileMetrics(cache, "my-cache-name").bindTo(registry)
 ```
