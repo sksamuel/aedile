@@ -138,6 +138,8 @@ class Builder<K, V>(private val builder: Caffeine<K, V>) {
 
 class Cache<K, V>(private val scope: CoroutineScope, private val cache: AsyncCache<K, V>) {
 
+   fun underlying(): AsyncCache<K, V> = cache
+
    suspend fun getIfPresent(key: K): V? {
       return cache.getIfPresent(key)?.await()
    }
@@ -184,6 +186,8 @@ class Cache<K, V>(private val scope: CoroutineScope, private val cache: AsyncCac
 }
 
 class LoadingCache<K, V>(private val scope: CoroutineScope, private val cache: AsyncLoadingCache<K, V>) {
+
+   fun underlying() = cache
 
    suspend fun getIfPresent(key: K): V? {
       return cache.getIfPresent(key)?.await()

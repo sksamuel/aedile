@@ -19,5 +19,5 @@ refreshVersions {
 
 include(
    "aedile-core",
-	"aedile-caffeine",
+   "aedile-micrometer",
 )
