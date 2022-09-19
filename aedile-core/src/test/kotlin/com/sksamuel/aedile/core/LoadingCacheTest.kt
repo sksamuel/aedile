@@ -46,6 +46,26 @@ class LoadingCacheTest : FunSpec() {
          cache.get("else") shouldBe "bar"
       }
 
+      test("LoadingCache should support getAll") {
+         val cache = caffeineBuilder<String, String>().build {
+            delay(1)
+            "bar"
+         }
+         cache.put("foo") {
+            delay(1)
+            "wobble"
+         }
+         cache.put("bar") {
+            delay(1)
+            "wibble"
+         }
+         cache.put("baz") {
+            delay(1)
+            "wubble"
+         }
+         cache.getAll(listOf("foo", "bar")) shouldBe mapOf("foo" to "wobble", "bar" to "wibble")
+      }
+
       test("LoadingCache should support asMap") {
          val cache = caffeineBuilder<String, String>().build {
             delay(1)
