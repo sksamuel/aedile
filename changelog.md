@@ -2,4 +2,4 @@
 
 ### 1.0.0 (Pending)
 
-* First publicised release.
+* First published release.

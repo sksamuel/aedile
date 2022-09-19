@@ -31,8 +31,20 @@ val value1 = cache.getIfPresent("foo") // value or null
 
 val value2 = cache.getOrPut("foo") {
    delay(100) // look ma, we support suspendable functions!
-   "bar"
+   "value"
 }
+```
+
+The build function supports a generic compute function which is used if no specific compute function is provided.
+
+```kotlin
+val cache = caffeineBuilder().build<String, String> {
+   delay(1)
+   "value"
+}
+
+cache.get("foo") // uses default compute
+cache.get("bar") { "other" } // uses specific compute function
 ```
 
 ### Specify Dispatchers
