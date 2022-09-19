@@ -15,6 +15,24 @@ class LoadingCacheTest : FunSpec() {
          cache.get("else") shouldBe "bar"
       }
 
+      test("LoadingCache should support getOrPut") {
+
+         val cache = caffeineBuilder<String, String>().build {
+            delay(1)
+            "bar"
+         }
+
+         cache.getOrPut("foo") {
+            delay(1)
+            "wibble"
+         } shouldBe "wibble"
+
+         cache.getOrPut("foo") {
+            delay(1)
+            "wobble"
+         } shouldBe "wibble"
+      }
+
       test("LoadingCache should support suspendable put") {
          val cache = caffeineBuilder<String, String>().build {
             delay(1)
@@ -26,6 +44,22 @@ class LoadingCacheTest : FunSpec() {
          }
          cache.get("foo") shouldBe "wibble"
          cache.get("else") shouldBe "bar"
+      }
+
+      test("LoadingCache should support asMap") {
+         val cache = caffeineBuilder<String, String>().build {
+            delay(1)
+            "bar"
+         }
+         cache.put("foo") {
+            delay(1)
+            "wobble"
+         }
+         cache.put("bar") {
+            delay(1)
+            "wibble"
+         }
+         cache.asMap() shouldBe mapOf("foo" to "wobble", "bar" to "wibble")
       }
    }
 }
