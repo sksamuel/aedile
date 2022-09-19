@@ -35,7 +35,7 @@ allprojects {
    dependencies {
       implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
       implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.6.4")
-      implementation("com.sksamuel.tabby:tabby-fp:2.0.32")
+      implementation("com.sksamuel.tabby:tabby-fp:2.0.34")
 
       testImplementation("io.kotest:kotest-framework-datatest:5.4.2")
       testImplementation("io.kotest:kotest-runner-junit5:5.4.2")

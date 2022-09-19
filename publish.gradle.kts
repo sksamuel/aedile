@@ -56,14 +56,14 @@ publishing {
     register("mavenJava", MavenPublication::class) {
       from(components["java"])
       pom {
-        name.set("cohort")
-        description.set("Ktor Actuator")
-        url.set("http://www.github.com/sksamuel/cohort")
+        name.set("aedile")
+        description.set("Caffine Kotlin Wrapper")
+        url.set("http://www.github.com/sksamuel/aedile")
 
         scm {
-          connection.set("scm:git:http://www.github.com/sksamuel/cohort/")
+          connection.set("scm:git:http://www.github.com/sksamuel/aedile/")
           developerConnection.set("scm:git:http://github.com/sksamuel/")
-          url.set("http://www.github.com/sksamuel/cohort/")
+          url.set("http://www.github.com/sksamuel/aedile/")
         }
 
         licenses {
