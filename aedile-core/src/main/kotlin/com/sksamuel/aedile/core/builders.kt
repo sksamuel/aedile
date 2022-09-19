@@ -2,6 +2,8 @@ package com.sksamuel.aedile.core
 
 import com.github.benmanes.caffeine.cache.AsyncCache
 import com.github.benmanes.caffeine.cache.Caffeine
+import com.github.benmanes.caffeine.cache.RemovalCause
+import com.github.benmanes.caffeine.cache.RemovalListener
 import com.github.benmanes.caffeine.cache.Weigher
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -93,6 +95,32 @@ class Builder<K, V>(private val builder: Caffeine<K, V>) {
     */
    fun <K1 : K, V1 : V> buildAsync2(load: suspend (K1) -> V1): AedileAsync<K1, V1> {
       return AedileAsync(builder.buildAsync { key, _ -> scope!!.async { load(key) }.asCompletableFuture() })
+   }
+
+   /**
+    * Specifies a nanosecond-precision time source for use in determining when entries
+    * should be expired or refreshed. By default, System.nanoTime is used.
+    */
+   fun ticker(f: () -> Long): Builder<K, V> {
+      builder.ticker { f() }
+      return this
+   }
+
+   /**
+    * Sets the minimum total size for the internal data structures.
+    *
+    * Providing a large enough estimate at construction time avoids the
+    * need for expensive resizing operations later,
+    * but setting this value unnecessarily high wastes memory.
+    */
+   fun initialCapacity(initialCapacity: Int): Builder<K, V> {
+      builder.initialCapacity(initialCapacity)
+      return this
+   }
+
+   fun evictionListener(listener: (K?, V?, RemovalCause) -> Unit): Builder<K, V> {
+      builder.evictionListener(RemovalListener<K, V> { key, value, cause -> listener(key, value, cause) })
+      return this
    }
 }
 
