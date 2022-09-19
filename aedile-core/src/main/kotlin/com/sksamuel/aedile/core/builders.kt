@@ -12,7 +12,6 @@ import kotlinx.coroutines.asExecutor
 import kotlinx.coroutines.async
 import kotlinx.coroutines.future.asCompletableFuture
 import kotlinx.coroutines.future.await
-import java.util.function.Function
 import kotlin.time.Duration
 import kotlin.time.toJavaDuration
 
@@ -132,8 +131,8 @@ class AedileAsync<K, V>(private val cache: AsyncCache<K, V>) {
       return cache.getIfPresent(key)?.await()
    }
 
-   suspend fun getOrPut(key: K, f: (K) -> V): V? {
-      return cache.get(key, Function<K, V> { f(it) })?.await()
+   suspend fun getOrPut(key: K, compute: suspend (K) -> V): V {
+      return cache.get(key) { k, _ -> scope.async { compute(k) }.asCompletableFuture() }.await()
    }
 
    /**
@@ -143,7 +142,7 @@ class AedileAsync<K, V>(private val cache: AsyncCache<K, V>) {
     *
     * If the suspendable computation throws, the entry will be automatically removed.
     */
-   suspend fun foo(key: K, compute: () -> V) {
+   suspend fun foo(key: K, compute: suspend () -> V) {
       cache.put(key, scope.async { compute() }.asCompletableFuture())
    }
 }
