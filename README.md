@@ -86,7 +86,7 @@ Caffeine provides different approaches to timed eviction:
 ## Specify Dispatchers
 
 By default, Aedile will use `Dispatchers.IO` for executing the compute functions. You can specify your own
-dispatcher by using `withDispatcher` when configuring the builder.
+dispatcher by specifying when configuring the builder.
 
 ```kotlin
 val cacheDispatcher = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
