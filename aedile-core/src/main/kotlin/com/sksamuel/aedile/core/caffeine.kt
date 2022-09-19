@@ -149,4 +149,8 @@ class AedileAsync<K, V>(private val scope: CoroutineScope, private val cache: As
    suspend fun put(key: K, compute: suspend () -> V) {
       cache.put(key, scope.async { compute() }.asCompletableFuture())
    }
+
+   suspend fun asMap(): Map<K, V> {
+      return cache.asMap().mapValues { it.value.await() }
+   }
 }
