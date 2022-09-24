@@ -14,6 +14,7 @@ class CacheMetrics<K, V>(
 ) : MeterBinder {
 
    override fun bindTo(registry: MeterRegistry) {
+      cache.underlying().synchronous().stats()
       CaffeineCacheMetrics(cache.underlying().synchronous(), cacheName, tags).bindTo(registry)
    }
 }

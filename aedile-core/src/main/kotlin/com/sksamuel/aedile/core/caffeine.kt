@@ -2,6 +2,7 @@ package com.sksamuel.aedile.core
 
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.github.benmanes.caffeine.cache.RemovalCause
+import com.github.benmanes.caffeine.cache.stats.StatsCounter
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
@@ -24,6 +25,8 @@ data class Configuration<K, V>(
 
    var maximumWeight: Long? = null,
    var maximumSize: Long? = null,
+
+   var statsCounter: StatsCounter? = null,
 
    /**
     * Specifies a nanosecond-precision time source for use in determining when entries
@@ -70,6 +73,7 @@ fun <K, V> caffeineBuilder(configure: Configuration<K, V>.() -> Unit = {}): Buil
    c.expireAfterWrite?.let { caffeine.expireAfterWrite(it.toJavaDuration()) }
    c.expireAfterAccess?.let { caffeine.expireAfterAccess(it.toJavaDuration()) }
    c.refreshAfterWrite?.let { caffeine.refreshAfterWrite(it.toJavaDuration()) }
+   c.statsCounter?.let { counter -> caffeine.recordStats { counter } }
 
    val scope = CoroutineScope(c.dispatcher + CoroutineName("Aedile-Caffeine-Scope"))
    return Builder(scope, caffeine)
