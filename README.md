@@ -98,8 +98,8 @@ val cache = caffeineBuilder<String, String>() {
 }.build()
 ```
 
-You can also specify a [CoroutineScope] if required. Note that this scope should not be cancelled while the cache is in
-use.
+You can also specify a custom `CoroutineScope` if required. Note that this scope should not be cancelled or closed while
+the cache is in use.
 
 ## Metrics
 
