@@ -20,6 +20,12 @@ data class Configuration<K, V>(
     */
    var dispatcher: CoroutineDispatcher = Dispatchers.IO,
 
+   /**
+    * The [CoroutineScope] that is used to create coroutines for loading functions and listeners.
+    * If null, one will be created using the specified [dispatcher].
+    */
+   var scope: CoroutineScope? = null,
+
    var refreshAfterWrite: Duration? = null,
    var expireAfterAccess: Duration? = null,
    var expireAfterWrite: Duration? = null,
@@ -79,7 +85,7 @@ fun <K, V> caffeineBuilder(configure: Configuration<K, V>.() -> Unit = {}): Buil
    c.statsCounter?.let { counter -> caffeine.recordStats { counter } }
    c.expireAfter?.let { caffeine.expireAfter(it) }
 
-   val scope = CoroutineScope(c.dispatcher + CoroutineName("Aedile-Caffeine-Scope"))
+   val scope = c.scope ?: CoroutineScope(c.dispatcher + CoroutineName("Aedile-Caffeine-Scope"))
    return Builder(scope, caffeine)
 }
 
