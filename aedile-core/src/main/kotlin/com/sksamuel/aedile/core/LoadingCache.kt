@@ -41,9 +41,12 @@ class LoadingCache<K, V>(private val scope: CoroutineScope, private val cache: A
     *
     * If the suspendable computation throws, the entry will be automatically removed from this cache.
     */
-   suspend fun getOrPut(key: K, compute: suspend (K) -> V): V {
+   suspend fun get(key: K, compute: suspend (K) -> V): V {
       return cache.get(key) { k, _ -> scope.async { compute(k) }.asCompletableFuture() }.await()
    }
+
+   @Deprecated("Use get", ReplaceWith("get(key, compute)"))
+   suspend fun getOrPut(key: K, compute: suspend (K) -> V): V = get(key, compute)
 
    /**
     * Associates a computed value with the given [key] in this cache.

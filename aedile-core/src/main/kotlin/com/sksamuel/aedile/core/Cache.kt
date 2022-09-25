@@ -32,9 +32,12 @@ class Cache<K, V>(private val scope: CoroutineScope, private val cache: AsyncCac
     * @return the present value, the computed value, or throws.
     *
     */
-   suspend fun getOrPut(key: K, compute: suspend (K) -> V): V {
+   suspend fun get(key: K, compute: suspend (K) -> V): V {
       return cache.get(key) { k, _ -> scope.async { compute(k) }.asCompletableFuture() }.await()
    }
+
+   @Deprecated("use get", ReplaceWith("get(key, compute)"))
+   suspend fun getOrPut(key: K, compute: suspend (K) -> V): V = get(key, compute)
 
    /**
     * Associates a computed value with the given [key] in this cache.

@@ -12,9 +12,9 @@ class CacheTest : FunSpec() {
          cache.getIfPresent("else") shouldBe null
       }
 
-      test("Cache should support suspendable compute function") {
+      test("Cache.get should support suspendable compute function") {
          val cache = caffeineBuilder<String, String>().build()
-         cache.getOrPut("foo") {
+         cache.get("foo") {
             delay(1)
             "bar"
          } shouldBe "bar"
