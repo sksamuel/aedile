@@ -1,5 +1,9 @@
 # Changelog
 
+### 1.1.1
+
+* Support weak keys.
+
 ### 1.1.0
 
 * Support custom `CoroutineScope`.
