@@ -86,6 +86,17 @@ Caffeine provides different approaches to timed eviction:
 * expireAfter(expiry): Pass an implementation of `Expiry` which has methods for specifying that expiry should occur
   either a duration from insert, a duration from last refresh, or a duration from last read.
 
+You can specify a suspendable function to listen to evictions:
+
+```kotlin
+val cache = caffeineBuilder<String, String> {
+   evictionListener = { key, value, cause -> when (cause) {
+      RemovalCause.SIZE -> println("Removed due to size constraints")
+      else -> delay(100) // suspendable for no real reason, but just to show you can!!
+   } }
+}.build()
+```
+
 ## Specify Dispatchers
 
 By default, Aedile will use `Dispatchers.IO` for executing the compute functions. You can specify your own
