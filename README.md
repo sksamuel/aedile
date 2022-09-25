@@ -83,6 +83,9 @@ Caffeine provides different approaches to timed eviction:
   most recent replacement of the value. This could be desirable if cached data grows stale after a certain amount of
   time.
 
+* expireAfter(expiry): Pass an implementation of `Expiry` which has methods for specifying that expiry should occur
+  either a duration from insert, a duration from last refresh, or a duration from last read.
+
 ## Specify Dispatchers
 
 By default, Aedile will use `Dispatchers.IO` for executing the compute functions. You can specify your own
@@ -94,6 +97,9 @@ val cache = caffeineBuilder<String, String>() {
    this.dispatcher = cacheDispatcher
 }.build()
 ```
+
+You can also specify a [CoroutineScope] if required. Note that this scope should not be cancelled while the cache is in
+use.
 
 ## Metrics
 

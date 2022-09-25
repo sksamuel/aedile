@@ -89,11 +89,13 @@ fun <K, V> caffeineBuilder(configure: Configuration<K, V>.() -> Unit = {}): Buil
    c.initialCapacity?.let { caffeine.initialCapacity(it) }
    c.weigher?.let { caffeine.weigher(it) }
    c.ticker?.let { caffeine.ticker(it) }
+
    c.expireAfterWrite?.let { caffeine.expireAfterWrite(it.toJavaDuration()) }
    c.expireAfterAccess?.let { caffeine.expireAfterAccess(it.toJavaDuration()) }
+   c.expireAfter?.let { caffeine.expireAfter(it) }
+
    c.refreshAfterWrite?.let { caffeine.refreshAfterWrite(it.toJavaDuration()) }
    c.statsCounter?.let { counter -> caffeine.recordStats { counter } }
-   c.expireAfter?.let { caffeine.expireAfter(it) }
 
    return Builder(scope, caffeine)
 }

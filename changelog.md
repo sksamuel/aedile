@@ -1,10 +1,10 @@
 # Changelog
 
-### 1.0.3
+### 1.1.0
 
-* Support custom `CoroutineScope`
-* EvictionListener function should be suspendable
-* Support `Expiry` interface in builder.U
+* Support custom `CoroutineScope`.
+* EvictionListener function should be suspendable.
+* Support `Expiry` interface in builder.
 * Support `StatsCounter` in builder.
 
 ### 1.0.2
