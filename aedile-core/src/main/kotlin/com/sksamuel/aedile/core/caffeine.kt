@@ -10,6 +10,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.future.asCompletableFuture
+import kotlinx.coroutines.launch
 import kotlin.time.Duration
 import kotlin.time.toJavaDuration
 
@@ -50,7 +51,7 @@ data class Configuration<K, V>(
     * In the case of expiration or reference collection, the entry may be pending removal
     * and will be discarded as part of the routine maintenance.
     */
-   var evictionListener: (K?, V?, RemovalCause) -> Unit = { _, _, _ -> },
+   var evictionListener: suspend (K?, V?, RemovalCause) -> Unit = { _, _, _ -> },
 
    /**
     * Sets the minimum total size for the internal data structures.
@@ -73,7 +74,16 @@ fun <K, V> caffeineBuilder(configure: Configuration<K, V>.() -> Unit = {}): Buil
    c.configure()
    val caffeine = Caffeine.newBuilder()
 
-   c.evictionListener.let { caffeine.evictionListener(it) }
+   val scope = c.scope ?: CoroutineScope(c.dispatcher + CoroutineName("Aedile-Caffeine-Scope"))
+
+   c.evictionListener.let { listener ->
+      caffeine.evictionListener<K, V> { key, value, cause ->
+         scope.launch {
+            listener.invoke(key, value, cause)
+         }
+      }
+   }
+
    c.maximumSize?.let { caffeine.maximumSize(it) }
    c.maximumWeight?.let { caffeine.maximumWeight(it) }
    c.initialCapacity?.let { caffeine.initialCapacity(it) }
@@ -85,7 +95,6 @@ fun <K, V> caffeineBuilder(configure: Configuration<K, V>.() -> Unit = {}): Buil
    c.statsCounter?.let { counter -> caffeine.recordStats { counter } }
    c.expireAfter?.let { caffeine.expireAfter(it) }
 
-   val scope = c.scope ?: CoroutineScope(c.dispatcher + CoroutineName("Aedile-Caffeine-Scope"))
    return Builder(scope, caffeine)
 }
 

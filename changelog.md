@@ -3,6 +3,7 @@
 ### 1.0.3
 
 * Support custom `CoroutineScope`
+* EvictionListener function should be suspendable
 * Support `Expiry` interface in builder.U
 * Support `StatsCounter` in builder.
 
