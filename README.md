@@ -15,7 +15,7 @@ See [changelog](changelog.md)
   executed in their own coroutines.
 * **Backed by Caffeine:** This is not a new cache implementation with its own bugs and quirks, but a simple wrapper
   around Caffeine which has been used on the JVM for years.
-* **Kotlin duration:** Specify expiration and refresh times in `kotlin.time.Duration` rather than Java durations.
+* **Kotlin durations:** Specify expiration and refresh times in `kotlin.time.Duration` rather than Java durations.
 * **Kotlin functions:** Whereever a function is required - eg eviction listener - Aedile supports Kotlin functions
   rather than Java's Function interface.
 
