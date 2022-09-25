@@ -81,5 +81,15 @@ class LoadingCacheTest : FunSpec() {
          }
          cache.asMap() shouldBe mapOf("foo" to "wobble", "bar" to "wibble")
       }
+
+      test("LoadingCache.getIfPresent") {
+         val cache = caffeineBuilder<String, String>().build {
+            delay(1)
+            "bar"
+         }
+         cache.getIfPresent("foo") shouldBe null
+         cache.put("foo") { "baz" }
+         cache.getIfPresent("foo") shouldBe "baz"
+      }
    }
 }
