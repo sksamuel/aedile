@@ -1,5 +1,11 @@
 # Changelog
 
+### 1.0.3
+
+* Support custom `CoroutineScope`
+* Support `Expiry` interface in builder.U
+* Support `StatsCounter` in builder.
+
 ### 1.0.2
 
 * `Cache` should support `getAll`
