@@ -22,12 +22,12 @@ class LoadingCacheTest : FunSpec() {
             "bar"
          }
 
-         cache.getOrPut("foo") {
+         cache.get("foo") {
             delay(1)
             "wibble"
          } shouldBe "wibble"
 
-         cache.getOrPut("foo") {
+         cache.get("foo") {
             delay(1)
             "wobble"
          } shouldBe "wibble"

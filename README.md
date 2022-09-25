@@ -59,7 +59,7 @@ cache.get("bar") { "other" } // uses specific compute function
 
 ## Configuration
 
-When creating the cache, Aedile supports most Caffeine configuration options. The exception is `weakKeys`
+When creating the cache, Aedile supports most Caffeine configuration options. The exception is `softValues`
 and `weakValues` which are not supported with asynchronous operations. Since Aedile's purpose is to support coroutines,
 these options are ignored.
 
