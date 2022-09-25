@@ -8,7 +8,8 @@ import java.util.concurrent.Executors
 
 class CustomDispatcherTest : FunSpec() {
    init {
-      test("cache should use custom dispatcher") {
+
+      test("Cache should use custom dispatcher") {
 
          val dispatcher = Executors.newCachedThreadPool { r ->
             val t = Thread(r)
@@ -23,6 +24,23 @@ class CustomDispatcherTest : FunSpec() {
             Thread.currentThread().name shouldContain "mcthreadface"
             "bar"
          } shouldBe "bar"
+      }
+
+      test("LoadingCache should use custom dispatcher") {
+
+         val dispatcher = Executors.newCachedThreadPool { r ->
+            val t = Thread(r)
+            t.name = "mcthreadface"
+            t
+         }.asCoroutineDispatcher()
+
+         val cache = caffeineBuilder<String, String> {
+            this.dispatcher = dispatcher
+         }.build {
+            Thread.currentThread().name shouldContain "mcthreadface"
+            "bar"
+         }
+         cache.get("foo") shouldBe "bar"
       }
    }
 }
