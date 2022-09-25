@@ -31,6 +31,8 @@ data class Configuration<K, V>(
    var expireAfterAccess: Duration? = null,
    var expireAfterWrite: Duration? = null,
 
+   var weakKeys: Boolean? = null,
+
    var maximumWeight: Long? = null,
    var maximumSize: Long? = null,
 
@@ -96,6 +98,8 @@ fun <K, V> caffeineBuilder(configure: Configuration<K, V>.() -> Unit = {}): Buil
 
    c.refreshAfterWrite?.let { caffeine.refreshAfterWrite(it.toJavaDuration()) }
    c.statsCounter?.let { counter -> caffeine.recordStats { counter } }
+
+   if (c.weakKeys == true) caffeine.weakKeys()
 
    return Builder(scope, caffeine)
 }
