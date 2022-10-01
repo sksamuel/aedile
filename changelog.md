@@ -1,5 +1,9 @@
 # Changelog
 
+### 1.1.2
+
+* Use supervisor scope for suspend computations #1
+
 ### 1.1.1
 
 * Support weak keys.
