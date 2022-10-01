@@ -1,5 +1,6 @@
 package com.sksamuel.aedile.core
 
+import io.kotest.assertions.throwables.shouldThrowAny
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.delay
@@ -31,6 +32,21 @@ class LoadingCacheTest : FunSpec() {
             delay(1)
             "wobble"
          } shouldBe "wibble"
+      }
+
+      test("LoadingCache should handle exceptions in the compute function") {
+         val cache = caffeineBuilder<String, String>().build() {
+            delay(1)
+            "bar"
+         }
+         shouldThrowAny {
+            cache.get("foo") {
+               error("kapow")
+            }
+         }
+         cache.get("bar") {
+            "baz"
+         } shouldBe "baz"
       }
 
       test("LoadingCache should support suspendable put") {

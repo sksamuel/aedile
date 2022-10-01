@@ -8,6 +8,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.future.asCompletableFuture
 import kotlinx.coroutines.launch
@@ -76,7 +77,7 @@ fun <K, V> caffeineBuilder(configure: Configuration<K, V>.() -> Unit = {}): Buil
    c.configure()
    val caffeine = Caffeine.newBuilder()
 
-   val scope = c.scope ?: CoroutineScope(c.dispatcher + CoroutineName("Aedile-Caffeine-Scope"))
+   val scope = c.scope ?: CoroutineScope(c.dispatcher + CoroutineName("Aedile-Caffeine-Scope") + SupervisorJob())
 
    c.evictionListener.let { listener ->
       caffeine.evictionListener<K, V> { key, value, cause ->

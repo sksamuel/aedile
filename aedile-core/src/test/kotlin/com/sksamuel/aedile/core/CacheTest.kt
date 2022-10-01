@@ -1,5 +1,7 @@
 package com.sksamuel.aedile.core
 
+import io.kotest.assertions.throwables.shouldThrow
+import io.kotest.assertions.throwables.shouldThrowAny
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.delay
@@ -18,6 +20,18 @@ class CacheTest : FunSpec() {
             delay(1)
             "bar"
          } shouldBe "bar"
+      }
+
+      test("cache should handle exceptions in the compute function") {
+         val cache = caffeineBuilder<String, String>().build()
+         shouldThrowAny {
+            cache.get("foo") {
+               error("kapow")
+            }
+         }
+         cache.get("bar") {
+            "baz"
+         } shouldBe "baz"
       }
 
       test("Cache should support getAll") {
