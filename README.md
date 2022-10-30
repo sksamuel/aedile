@@ -27,7 +27,7 @@ Add Aedile to your build:
 implementation 'com.sksamuel.aedile:aedile-core:<version>'
 ```
 
-Next, in your code, create a cache through the cahce builder with the `caffeineBuilder()` function,
+Next, in your code, create a cache through the cache builder with the `caffeineBuilder()` function,
 supplying the key / value types.
 
 ```kotlin
@@ -84,7 +84,7 @@ Caffeine provides different approaches to timed eviction:
   time.
 
 * expireAfter(expiry): Pass an implementation of `Expiry` which has methods for specifying that expiry should occur
-  either a duration from insert, a duration from last refresh, or a duration from last read.
+  either after a duration from insert, a duration from last refresh, or a duration from last read.
 
 You can specify a suspendable function to listen to evictions:
 
@@ -100,7 +100,7 @@ val cache = caffeineBuilder<String, String> {
 ## Specify Dispatchers
 
 By default, Aedile will use `Dispatchers.IO` for executing the compute functions. You can specify your own
-dispatcher by specifying when configuring the builder.
+dispatcher when configuring the builder.
 
 ```kotlin
 val cacheDispatcher = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
