@@ -54,11 +54,11 @@ allprojects {
 
    java {
       toolchain {
-         languageVersion.set(JavaLanguageVersion.of(11))
+         languageVersion.set(JavaLanguageVersion.of(8))
       }
    }
 
    tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-      kotlinOptions.jvmTarget = "11"
+      kotlinOptions.jvmTarget = "8"
    }
 }
