@@ -29,21 +29,44 @@ data class Configuration<K, V>(
    var scope: CoroutineScope? = null,
 
    var refreshAfterWrite: Duration? = null,
+
+   /**
+    * See full docs at [Caffeine.expireAfterAccess].
+    */
    var expireAfterAccess: Duration? = null,
+
+   /**
+    * See full docs at [Caffeine.expireAfterWrite].
+    */
    var expireAfterWrite: Duration? = null,
 
+   /**
+    * See full docs at [Caffeine.weakKeys].
+    */
    var weakKeys: Boolean? = null,
 
+   /**
+    * See full docs at [Caffeine.maximumWeight].
+    */
    var maximumWeight: Long? = null,
+
+   /**
+    * See full docs at [Caffeine.maximumSize].
+    */
    var maximumSize: Long? = null,
 
    var statsCounter: StatsCounter? = null,
 
+   /**
+    * See full docs at [Caffeine.expireAfter].
+    */
    var expireAfter: Expiry<K, V>? = null,
 
    /**
     * Specifies a nanosecond-precision time source for use in determining when entries
     * should be expired or refreshed. By default, System.nanoTime is used.
+    *
+    * See full docs at [Caffeine.ticker].
     */
    var ticker: (() -> Long)? = null,
 
@@ -53,6 +76,8 @@ data class Configuration<K, V>(
     * The cache will invoke this listener during the atomic operation to remove the entry.
     * In the case of expiration or reference collection, the entry may be pending removal
     * and will be discarded as part of the routine maintenance.
+    *
+    * See full docs at [Caffeine.evictionListener].
     */
    var evictionListener: suspend (K?, V?, RemovalCause) -> Unit = { _, _, _ -> },
 
@@ -62,9 +87,17 @@ data class Configuration<K, V>(
     * Providing a large enough estimate at construction time avoids the
     * need for expensive resizing operations later,
     * but setting this value unnecessarily high wastes memory.
+    *
+    * See full docs at [Caffeine.initialCapacity].
     */
    var initialCapacity: Int? = null,
 
+   /**
+    * Specifies the weigher to use in determining the weight of entries.
+    * Entry weight is taken into consideration by maximumWeight(long) when determining which entries to evict.
+    *
+    * See full docs at [Caffeine.weigher].
+    */
    var weigher: ((K, V) -> Int)? = null,
 )
 
@@ -87,11 +120,12 @@ fun <K, V> caffeineBuilder(configure: Configuration<K, V>.() -> Unit = {}): Buil
       }
    }
 
+   c.initialCapacity?.let { caffeine.initialCapacity(it) }
+   c.ticker?.let { caffeine.ticker(it) }
+
    c.maximumSize?.let { caffeine.maximumSize(it) }
    c.maximumWeight?.let { caffeine.maximumWeight(it) }
-   c.initialCapacity?.let { caffeine.initialCapacity(it) }
    c.weigher?.let { caffeine.weigher(it) }
-   c.ticker?.let { caffeine.ticker(it) }
 
    c.expireAfterWrite?.let { caffeine.expireAfterWrite(it.toJavaDuration()) }
    c.expireAfterAccess?.let { caffeine.expireAfterAccess(it.toJavaDuration()) }
