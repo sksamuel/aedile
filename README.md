@@ -74,7 +74,7 @@ val cache = caffeineBuilder<String, String> {
 
 ## Evictions
 
-Caffeine provides different approaches to timed eviction:
+Caffeine provides different approaches to eviction:
 
 * expireAfterAccess(duration): Expire entries after the specified duration has passed since the entry was last accessed
   by a read or a write. This could be desirable if the cached data is bound to a session and expires due to inactivity.
@@ -86,14 +86,19 @@ Caffeine provides different approaches to timed eviction:
 * expireAfter(expiry): Pass an implementation of `Expiry` which has methods for specifying that expiry should occur
   either after a duration from insert, a duration from last refresh, or a duration from last read.
 
+* invalidate / invalidateAll: Programatically remove entries based on their key(s) or remove all entries. In the case of
+  a loading cache, any currently loading values may not be removed.
+
 You can specify a suspendable function to listen to evictions:
 
 ```kotlin
 val cache = caffeineBuilder<String, String> {
-   evictionListener = { key, value, cause -> when (cause) {
-      RemovalCause.SIZE -> println("Removed due to size constraints")
-      else -> delay(100) // suspendable for no real reason, but just to show you can!!
-   } }
+   evictionListener = { key, value, cause ->
+      when (cause) {
+         RemovalCause.SIZE -> println("Removed due to size constraints")
+         else -> delay(100) // suspendable for no real reason, but just to show you can!!
+      }
+   }
 }.build()
 ```
 
