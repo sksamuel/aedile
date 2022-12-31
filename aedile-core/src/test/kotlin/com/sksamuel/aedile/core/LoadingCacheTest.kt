@@ -133,5 +133,26 @@ class LoadingCacheTest : FunSpec() {
          cache.put("foo") { "baz" }
          cache.getIfPresent("foo") shouldBe "baz"
       }
+
+      test("Cache should support invalidate") {
+         val cache: LoadingCache<String, String> = caffeineBuilder<String, String>().build {
+            delay(1)
+            "bar"
+         }
+         cache.put("wibble", "wobble")
+         cache.getIfPresent("wibble") shouldBe "wobble"
+         cache.invalidate("wibble")
+         cache.getIfPresent("wibble") shouldBe null
+      }
+
+      test("Cache should support contains") {
+         val cache: LoadingCache<String, String> = caffeineBuilder<String, String>().build {
+            delay(1)
+            "bar"
+         }
+         cache.put("wibble", "wobble")
+         cache.contains("wibble") shouldBe true
+         cache.contains("bubble") shouldBe false
+      }
    }
 }

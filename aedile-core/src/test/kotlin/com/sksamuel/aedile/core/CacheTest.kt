@@ -76,5 +76,20 @@ class CacheTest : FunSpec() {
          map["wibble"]?.await() shouldBe "wobble"
          map["bubble"]?.await() shouldBe "bobble"
       }
+
+      test("Cache should support invalidate") {
+         val cache = caffeineBuilder<String, String>().build()
+         cache.put("wibble", "wobble")
+         cache.getIfPresent("wibble") shouldBe "wobble"
+         cache.invalidate("wibble")
+         cache.getIfPresent("wibble") shouldBe null
+      }
+
+      test("Cache should support contains") {
+         val cache = caffeineBuilder<String, String>().build()
+         cache.put("wibble", "wobble")
+         cache.contains("wibble") shouldBe true
+         cache.contains("bubble") shouldBe false
+      }
    }
 }

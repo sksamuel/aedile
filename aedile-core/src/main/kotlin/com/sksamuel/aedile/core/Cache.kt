@@ -14,6 +14,10 @@ class Cache<K, V>(private val scope: CoroutineScope, private val cache: AsyncCac
 
    fun underlying(): AsyncCache<K, V> = cache
 
+   suspend fun contains(key: K): Boolean {
+      return cache.getIfPresent(key)?.await() != null
+   }
+
    suspend fun getIfPresent(key: K): V? {
       return cache.getIfPresent(key)?.await()
    }
@@ -111,7 +115,7 @@ class Cache<K, V>(private val scope: CoroutineScope, private val cache: AsyncCac
     * Will block until completed.
     * Behavior of entries currently being loaded is undefined.
     */
-   fun invalidateAll(key: K) {
+   fun invalidateAll() {
       cache.synchronous().invalidateAll()
    }
 }
