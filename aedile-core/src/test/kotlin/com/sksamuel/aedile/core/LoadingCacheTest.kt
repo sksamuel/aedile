@@ -98,6 +98,24 @@ class LoadingCacheTest : FunSpec() {
          cache.asMap() shouldBe mapOf("foo" to "wobble", "bar" to "wibble")
       }
 
+      test("LoadingCache should support asDeferredMap") {
+         val cache = caffeineBuilder<String, String>().build {
+            delay(1)
+            "bar"
+         }
+         cache.put("wibble") {
+            delay(1)
+            "wobble"
+         }
+         cache.put("bubble") {
+            delay(1)
+            "bobble"
+         }
+         val map = cache.asDeferredMap()
+         map["wibble"]?.await() shouldBe "wobble"
+         map["bubble"]?.await() shouldBe "bobble"
+      }
+
       test("LoadingCache.getIfPresent") {
          val cache = caffeineBuilder<String, String>().build {
             delay(1)

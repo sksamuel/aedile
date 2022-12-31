@@ -1,6 +1,5 @@
 package com.sksamuel.aedile.core
 
-import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.assertions.throwables.shouldThrowAny
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
@@ -32,6 +31,24 @@ class CacheTest : FunSpec() {
          cache.get("bar") {
             "baz"
          } shouldBe "baz"
+      }
+
+      test("Cache should support asDeferredMap") {
+         val cache = caffeineBuilder<String, String>().build {
+            delay(1)
+            "bar"
+         }
+         cache.put("wibble") {
+            delay(1)
+            "wobble"
+         }
+         cache.put("bubble") {
+            delay(1)
+            "bobble"
+         }
+         val map = cache.asDeferredMap()
+         map["wibble"]?.await() shouldBe "wobble"
+         map["bubble"]?.await() shouldBe "bobble"
       }
 
       test("Cache should support getAll") {

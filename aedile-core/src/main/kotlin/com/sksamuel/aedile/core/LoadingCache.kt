@@ -2,8 +2,10 @@ package com.sksamuel.aedile.core
 
 import com.github.benmanes.caffeine.cache.AsyncLoadingCache
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.future.asCompletableFuture
+import kotlinx.coroutines.future.asDeferred
 import kotlinx.coroutines.future.await
 
 class LoadingCache<K, V>(private val scope: CoroutineScope, private val cache: AsyncLoadingCache<K, V>) {
@@ -63,7 +65,20 @@ class LoadingCache<K, V>(private val scope: CoroutineScope, private val cache: A
       cache.put(key, scope.async { compute() }.asCompletableFuture())
    }
 
+   /**
+    * Returns a view of the entries in this map, requesting each value before returning the map.
+    * Note: This requires a fetch on all keys before the map is returned. For a lazily built
+    * map where each key is fetched as a suspendable call on demand, see [asDeferredMap].
+    */
    suspend fun asMap(): Map<K, V> {
       return cache.asMap().mapValues { it.value.await() }
+   }
+
+   /**
+    * Returns a view of the entries stored in this cache as an immutable map.
+    * Each value is fetched from the cache only when requested from the map.
+    * */
+   fun asDeferredMap(): Map<K, Deferred<V>> {
+      return cache.asMap().mapValues { it.value.asDeferred() }
    }
 }
