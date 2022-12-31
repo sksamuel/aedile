@@ -104,4 +104,22 @@ class LoadingCache<K, V>(private val scope: CoroutineScope, private val cache: A
    fun asDeferredMap(): Map<K, Deferred<V>> {
       return cache.asMap().mapValues { it.value.asDeferred() }
    }
+
+   /**
+    * Discards the given key in the cache.
+    * Will block until completed.
+    * Behavior of the entry if currently being loaded is undefined.
+    */
+   fun invalidate(key: K) {
+      cache.synchronous().invalidate(key)
+   }
+
+   /**
+    * Discards all entries in the cache.
+    * Will block until completed.
+    * Behavior of entries currently being loaded is undefined.
+    */
+   fun invalidateAll(key: K) {
+      cache.synchronous().invalidateAll()
+   }
 }
