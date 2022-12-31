@@ -15,7 +15,10 @@ class CacheTest : FunSpec() {
 
       test("Cache should support simple puts") {
          val cache = caffeineBuilder<String, String>().build()
-         cache["foo"] = "bar"
+         cache.put("foo", "bar")
+         cache["baz"] = "waz"
+         cache.getIfPresent("foo") shouldBe "bar"
+         cache.getIfPresent("baz") shouldBe "waz"
       }
 
       test("Cache.get should support suspendable compute function") {
@@ -36,15 +39,6 @@ class CacheTest : FunSpec() {
          cache.get("bar") {
             "baz"
          } shouldBe "baz"
-      }
-
-      test("Cache should support asDeferredMap") {
-         val cache = caffeineBuilder<String, String>().build()
-         cache.put("wibble", "wobble")
-         cache.put("bubble", "bobble")
-         val map = cache.asDeferredMap()
-         map["wibble"]?.await() shouldBe "wobble"
-         map["bubble"]?.await() shouldBe "bobble"
       }
 
       test("Cache should support getAll") {
@@ -68,19 +62,19 @@ class CacheTest : FunSpec() {
 
 
       test("Cache should support asMap") {
-         val cache = caffeineBuilder<String, String>().build {
-            delay(1)
-            "bar"
-         }
-         cache.put("foo") {
-            delay(1)
-            "wobble"
-         }
-         cache.put("bar") {
-            delay(1)
-            "wibble"
-         }
-         cache.asMap() shouldBe mapOf("foo" to "wobble", "bar" to "wibble")
+         val cache = caffeineBuilder<String, String>().build()
+         cache.put("wibble", "wobble")
+         cache["bubble"] = "bobble"
+         cache.asMap() shouldBe mapOf("wibble" to "wobble", "bubble" to "bobble")
+      }
+
+      test("Cache should support asDeferredMap") {
+         val cache = caffeineBuilder<String, String>().build()
+         cache.put("wibble", "wobble")
+         cache["bubble"] = "bobble"
+         val map = cache.asDeferredMap()
+         map["wibble"]?.await() shouldBe "wobble"
+         map["bubble"]?.await() shouldBe "bobble"
       }
    }
 }
