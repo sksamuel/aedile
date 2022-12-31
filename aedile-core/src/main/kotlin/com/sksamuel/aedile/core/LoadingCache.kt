@@ -7,6 +7,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.future.asCompletableFuture
 import kotlinx.coroutines.future.asDeferred
 import kotlinx.coroutines.future.await
+import java.util.concurrent.CompletableFuture
 
 class LoadingCache<K, V>(private val scope: CoroutineScope, private val cache: AsyncLoadingCache<K, V>) {
 
@@ -64,6 +65,21 @@ class LoadingCache<K, V>(private val scope: CoroutineScope, private val cache: A
    suspend fun put(key: K, compute: suspend () -> V) {
       cache.put(key, scope.async { compute() }.asCompletableFuture())
    }
+
+   /**
+    * Associates a computed value with the given [key] in this cache.
+    *
+    * If the cache previously contained a value associated with key,
+    * the old value is replaced by the new value.
+    */
+   fun put(key: K, value: V) {
+      cache.put(key, CompletableFuture.completedFuture(value))
+   }
+
+   /**
+    * Equivalent to [put], but exists so that we can override the operator.
+    */
+   operator fun set(key: K, value: V) = put(key, value)
 
    /**
     * Returns a view of the entries in this map, requesting each value before returning the map.

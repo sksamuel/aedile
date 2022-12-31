@@ -16,6 +16,11 @@ class LoadingCacheTest : FunSpec() {
          cache.get("else") shouldBe "bar"
       }
 
+      test("LoadingCache should support simple puts") {
+         val cache = caffeineBuilder<String, String>().build()
+         cache["foo"] = "bar"
+      }
+
       test("LoadingCache should support getOrPut") {
 
          val cache = caffeineBuilder<String, String>().build {

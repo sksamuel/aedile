@@ -13,7 +13,7 @@ class CacheTest : FunSpec() {
          cache.getIfPresent("else") shouldBe null
       }
 
-      test("Cache.get should support simple puts") {
+      test("Cache should support simple puts") {
          val cache = caffeineBuilder<String, String>().build()
          cache["foo"] = "bar"
       }
