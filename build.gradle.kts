@@ -35,7 +35,6 @@ allprojects {
    dependencies {
       implementation(KotlinX.coroutines.core)
       implementation(KotlinX.coroutines.jdk8)
-      implementation("com.sksamuel.tabby:tabby-fp:_")
 
       testImplementation(Testing.kotest.framework.datatest)
       testImplementation(Testing.kotest.runner.junit5)
