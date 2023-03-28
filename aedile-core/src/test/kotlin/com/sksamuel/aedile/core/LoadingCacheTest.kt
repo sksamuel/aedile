@@ -16,6 +16,15 @@ class LoadingCacheTest : FunSpec() {
          cache.get("else") shouldBe "bar"
       }
 
+      test("LoadingCache should use support suspendable multiple keys loading function") {
+         val cache = caffeineBuilder<String, String>().buildAll {
+            delay(1)
+            mapOf("tweedle" to "dee", "twuddle" to "dum")
+         }
+         cache.get("tweedle") shouldBe "dee"
+         cache.get("twuddle") shouldBe "dum"
+      }
+
       test("LoadingCache should support simple puts") {
          val cache = caffeineBuilder<String, String>().build()
          cache.put("foo", "bar")
