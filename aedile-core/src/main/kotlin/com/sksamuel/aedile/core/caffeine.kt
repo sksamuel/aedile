@@ -177,8 +177,8 @@ class Builder<K, V>(
    /**
     * Returns a [Cache] which suspends when requesting values.
     *
-    * If the key does not exist, then the suspendable [compute] function is invoked
-    * to compute a value, unless a specific compute has been provided with the key.
+    * If a requested key does not exist, then the suspendable [compute] function is invoked
+    * to compute the required values.
     *
     * If the suspendable computation throws or computes a null value then the
     * entry will be automatically removed.
