@@ -1,5 +1,6 @@
 package com.sksamuel.aedile.core
 
+import com.github.benmanes.caffeine.cache.AsyncCacheLoader
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.github.benmanes.caffeine.cache.Expiry
 import com.github.benmanes.caffeine.cache.RemovalCause
@@ -12,6 +13,8 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.future.asCompletableFuture
 import kotlinx.coroutines.launch
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.Executor
 import kotlin.time.Duration
 import kotlin.time.toJavaDuration
 
@@ -169,6 +172,34 @@ class Builder<K, V>(
     */
    fun build(compute: suspend (K) -> V): LoadingCache<K, V> {
       return LoadingCache(scope, caffeine.buildAsync { key, _ -> scope.async { compute(key) }.asCompletableFuture() })
+   }
+
+   /**
+    * Returns a [Cache] which suspends when requesting values.
+    *
+    * If a requested key does not exist, then the suspendable [compute] function is invoked
+    * to compute the required values.
+    *
+    * If the suspendable computation throws or computes a null value then the
+    * entry will be automatically removed.
+    *
+    */
+   fun buildAll(compute: suspend (Set<K>) -> Map<K, V>): LoadingCache<K, V> {
+      return LoadingCache(
+         scope,
+         caffeine.buildAsync(object : AsyncCacheLoader<K, V> {
+            override fun asyncLoad(key: K, executor: Executor?): CompletableFuture<V> {
+               return asyncLoadAll(setOf(key), executor).thenApply { results -> results[key] }
+            }
+
+            override fun asyncLoadAll(
+               keys: Set<K>,
+               executor: Executor?,
+            ): CompletableFuture<Map<K, V>> {
+               return scope.async { compute(keys) }.asCompletableFuture()
+            }
+         })
+      )
    }
 }
 
