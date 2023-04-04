@@ -10,9 +10,9 @@ import com.github.benmanes.caffeine.cache.AsyncLoadingCache
    ),
    level = DeprecationLevel.ERROR,
 )
-typealias LoadingCache<K, V> = LoadingCacheFacade<K, V>
+public typealias LoadingCache<K, V> = LoadingCacheFacade<K, V>
 
-interface LoadingCacheFacade<K, V> : CacheFacade<K, V> {
+public interface LoadingCacheFacade<K, V> : CacheFacade<K, V> {
 
    override fun underlying(): AsyncLoadingCache<K, V>
 
@@ -23,7 +23,7 @@ interface LoadingCacheFacade<K, V> : CacheFacade<K, V> {
     * @param key the key to lookup in the cache
     * @return the value in the cache or computed from the global loading function.
     */
-   suspend fun get(key: K): V
+   public suspend fun get(key: K): V
 
    /**
     * Returns the values associated with the given [keys] from this cache, suspending while each value
@@ -32,5 +32,5 @@ interface LoadingCacheFacade<K, V> : CacheFacade<K, V> {
     * @param keys the keys to lookup in the cache
     * @return the values in the cache or computed from the global loading function.
     */
-   suspend fun getAll(keys: Collection<K>): Map<K, V>
+   public suspend fun getAll(keys: Collection<K>): Map<K, V>
 }

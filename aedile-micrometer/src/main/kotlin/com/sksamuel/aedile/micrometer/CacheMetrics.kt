@@ -7,7 +7,7 @@ import io.micrometer.core.instrument.Tag
 import io.micrometer.core.instrument.binder.MeterBinder
 import io.micrometer.core.instrument.binder.cache.CaffeineCacheMetrics
 
-class CacheMetrics<K, V>(
+public class CacheMetrics<K, V>(
    private val cache: CacheFacade<K, V>,
    private val cacheName: String,
    private val tags: Collection<Tag> = emptyList()
@@ -19,7 +19,7 @@ class CacheMetrics<K, V>(
    }
 }
 
-class LoadingCacheMetrics<K, V>(
+public class LoadingCacheMetrics<K, V>(
    private val cache: LoadingCacheFacade<K, V>,
    private val cacheName: String,
    private val tags: Collection<Tag> = emptyList()

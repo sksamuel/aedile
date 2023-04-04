@@ -10,7 +10,7 @@ import kotlinx.coroutines.future.asCompletableFuture
 import kotlinx.coroutines.future.asDeferred
 import kotlinx.coroutines.future.await
 
-class CacheFacadeImpl<K, V>(
+public class CacheFacadeImpl<K, V>(
    private val scope: CoroutineScope,
    private val cache: AsyncCache<K, V>,
 ) : CacheFacade<K, V> {
@@ -62,7 +62,7 @@ class CacheFacadeImpl<K, V>(
    /**
     * Equivalent to [put], but exists so that we can override the operator.
     */
-   override operator fun set(key: K, value: V) = put(key, value)
+   override operator fun set(key: K, value: V): Unit = put(key, value)
 
    /**
     * Associates a computed value with the given [key] in this cache.

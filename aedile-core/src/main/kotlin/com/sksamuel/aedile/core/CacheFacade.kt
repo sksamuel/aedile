@@ -11,15 +11,15 @@ import kotlinx.coroutines.Deferred
    ),
    level = DeprecationLevel.ERROR,
 )
-typealias Cache<K, V> = CacheFacade<K, V>
+public typealias Cache<K, V> = CacheFacade<K, V>
 
-interface CacheFacade<K, V> {
+public interface CacheFacade<K, V> {
 
-   fun underlying(): AsyncCache<K, V>
+   public fun underlying(): AsyncCache<K, V>
 
-   suspend fun contains(key: K): Boolean
+   public suspend fun contains(key: K): Boolean
 
-   suspend fun getIfPresent(key: K): V?
+   public suspend fun getIfPresent(key: K): V?
 
    /**
     * Returns the value associated with key in this cache, obtaining that value from the
@@ -38,10 +38,10 @@ interface CacheFacade<K, V> {
     * @return the present value, the computed value, or throws.
     *
     */
-   suspend fun get(key: K, compute: suspend (K) -> V): V
+   public suspend fun get(key: K, compute: suspend (K) -> V): V
 
    @Deprecated("use get", ReplaceWith("get(key, compute)"))
-   suspend fun getOrPut(key: K, compute: suspend (K) -> V): V = get(key, compute)
+   public suspend fun getOrPut(key: K, compute: suspend (K) -> V): V = get(key, compute)
 
    /**
     * Associates a computed value with the given [key] in this cache.
@@ -49,12 +49,12 @@ interface CacheFacade<K, V> {
     * If the cache previously contained a value associated with key,
     * the old value is replaced by the new value.
     */
-   fun put(key: K, value: V)
+   public fun put(key: K, value: V)
 
    /**
     * Equivalent to [put], but exists so that we can override the operator.
     */
-   operator fun set(key: K, value: V) = put(key, value)
+   public operator fun set(key: K, value: V): Unit = put(key, value)
 
    /**
     * Associates a computed value with the given [key] in this cache.
@@ -67,20 +67,20 @@ interface CacheFacade<K, V> {
     * @param key the key to associate the computed value with
     * @param compute the suspendable function that generate the value.
     */
-   suspend fun put(key: K, compute: suspend () -> V)
+   public suspend fun put(key: K, compute: suspend () -> V)
 
    /**
     * Returns a view of the entries in this map, requesting each value before returning the map.
     * Note: This requires a fetch on all keys before the map is returned. For a lazily built
     * map where each key is fetched as a suspendable call on demand, see [asDeferredMap].
     */
-   suspend fun asMap(): Map<K, V>
+   public suspend fun asMap(): Map<K, V>
 
    /**
     * Returns a view of the entries stored in this cache as an immutable map.
     * Each value is fetched from the cache only when requested from the map.
     */
-   fun asDeferredMap(): Map<K, Deferred<V>>
+   public fun asDeferredMap(): Map<K, Deferred<V>>
 
    /**
     * Returns the future of a map of the values associated with [keys], creating or retrieving
@@ -90,19 +90,19 @@ interface CacheFacade<K, V> {
     *
     * Note that duplicate elements in [keys], as determined by [Any.equals], will be ignored.
     */
-   suspend fun getAll(keys: Collection<K>, compute: suspend (Collection<K>) -> Map<K, V>): Map<K, V>
+   public suspend fun getAll(keys: Collection<K>, compute: suspend (Collection<K>) -> Map<K, V>): Map<K, V>
 
    /**
     * Discards the given key in the cache.
     * Will block until completed.
     * Behavior of the entry if currently being loaded is undefined.
     */
-   fun invalidate(key: K)
+   public fun invalidate(key: K)
 
    /**
     * Discards all entries in the cache.
     * Will block until completed.
     * Behavior of entries currently being loaded is undefined.
     */
-   fun invalidateAll()
+   public fun invalidateAll()
 }

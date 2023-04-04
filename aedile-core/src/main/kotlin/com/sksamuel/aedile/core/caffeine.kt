@@ -16,52 +16,52 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.future.asCompletableFuture
 import kotlinx.coroutines.launch
 
-data class Configuration<K, V>(
+public data class Configuration<K, V>(
 
    /**
     * Sets the [CoroutineDispatcher] that is used when executing loading functions.
     */
-   var dispatcher: CoroutineDispatcher = Dispatchers.IO,
+   public var dispatcher: CoroutineDispatcher = Dispatchers.IO,
 
    /**
     * The [CoroutineScope] that is used to create coroutines for loading functions and listeners.
     * If null, one will be created using the specified [dispatcher].
     */
-   var scope: CoroutineScope? = null,
+   public var scope: CoroutineScope? = null,
 
-   var refreshAfterWrite: Duration? = null,
+   public var refreshAfterWrite: Duration? = null,
 
    /**
     * See full docs at [Caffeine.expireAfterAccess].
     */
-   var expireAfterAccess: Duration? = null,
+   public var expireAfterAccess: Duration? = null,
 
    /**
     * See full docs at [Caffeine.expireAfterWrite].
     */
-   var expireAfterWrite: Duration? = null,
+   public var expireAfterWrite: Duration? = null,
 
    /**
     * See full docs at [Caffeine.weakKeys].
     */
-   var weakKeys: Boolean? = null,
+   public var weakKeys: Boolean? = null,
 
    /**
     * See full docs at [Caffeine.maximumWeight].
     */
-   var maximumWeight: Long? = null,
+   public var maximumWeight: Long? = null,
 
    /**
     * See full docs at [Caffeine.maximumSize].
     */
-   var maximumSize: Long? = null,
+   public var maximumSize: Long? = null,
 
-   var statsCounter: StatsCounter? = null,
+   public var statsCounter: StatsCounter? = null,
 
    /**
     * See full docs at [Caffeine.expireAfter].
     */
-   var expireAfter: Expiry<K, V>? = null,
+   public var expireAfter: Expiry<K, V>? = null,
 
    /**
     * Specifies a nanosecond-precision time source for use in determining when entries
@@ -69,7 +69,7 @@ data class Configuration<K, V>(
     *
     * See full docs at [Caffeine.ticker].
     */
-   var ticker: (() -> Long)? = null,
+   public var ticker: (() -> Long)? = null,
 
    /**
     * Specifies a listener that is notified each time an entry is evicted.
@@ -80,7 +80,7 @@ data class Configuration<K, V>(
     *
     * See full docs at [Caffeine.evictionListener].
     */
-   var evictionListener: suspend (K?, V?, RemovalCause) -> Unit = { _, _, _ -> },
+   public var evictionListener: suspend (K?, V?, RemovalCause) -> Unit = { _, _, _ -> },
 
    /**
     * Sets the minimum total size for the internal data structures.
@@ -91,7 +91,7 @@ data class Configuration<K, V>(
     *
     * See full docs at [Caffeine.initialCapacity].
     */
-   var initialCapacity: Int? = null,
+   public var initialCapacity: Int? = null,
 
    /**
     * Specifies the weigher to use in determining the weight of entries.
@@ -99,13 +99,13 @@ data class Configuration<K, V>(
     *
     * See full docs at [Caffeine.weigher].
     */
-   var weigher: ((K, V) -> Int)? = null,
+   public var weigher: ((K, V) -> Int)? = null,
 )
 
 /**
  * Creates a [Builder] which by default uses [Dispatchers.IO] to execute computation functions.
  */
-fun <K, V> caffeineBuilder(configure: Configuration<K, V>.() -> Unit = {}): Builder<K, V> {
+public fun <K, V> caffeineBuilder(configure: Configuration<K, V>.() -> Unit = {}): Builder<K, V> {
 
    val c = Configuration<K, V>()
    c.configure()
@@ -140,7 +140,7 @@ fun <K, V> caffeineBuilder(configure: Configuration<K, V>.() -> Unit = {}): Buil
    return Builder(scope, caffeine)
 }
 
-class Builder<K, V>(
+public class Builder<K, V>(
    private val scope: CoroutineScope,
    private val caffeine: Caffeine<Any, Any>,
 ) {
@@ -154,7 +154,7 @@ class Builder<K, V>(
     * If the suspendable computation throws or computes a null value then the
     * entry will be automatically removed.
     */
-   fun build(): CacheFacade<K, V> {
+   public fun build(): CacheFacade<K, V> {
       return CacheFacadeImpl(scope, caffeine.buildAsync())
    }
 
@@ -168,7 +168,7 @@ class Builder<K, V>(
     * entry will be automatically removed.
     *
     */
-   fun build(compute: suspend (K) -> V): LoadingCacheFacade<K, V> {
+   public fun build(compute: suspend (K) -> V): LoadingCacheFacade<K, V> {
       return LoadingCacheFacadeImpl(
          scope = scope,
          cache = caffeine.buildAsync { key, _ -> scope.async { compute(key) }.asCompletableFuture() },
@@ -185,7 +185,7 @@ class Builder<K, V>(
     * entry will be automatically removed.
     *
     */
-   fun buildAll(compute: suspend (Set<K>) -> Map<K, V>): LoadingCacheFacade<K, V> {
+   public fun buildAll(compute: suspend (Set<K>) -> Map<K, V>): LoadingCacheFacade<K, V> {
       return LoadingCacheFacadeImpl(
          scope,
          caffeine.buildAsync(AsyncCacheLoader.bulk { keys, _ ->

@@ -4,3 +4,7 @@ dependencies {
 }
 
 apply("../publish.gradle.kts")
+
+kotlin {
+   explicitApi()
+}

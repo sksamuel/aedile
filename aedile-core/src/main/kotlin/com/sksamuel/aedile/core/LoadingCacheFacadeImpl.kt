@@ -10,7 +10,7 @@ import kotlinx.coroutines.future.asCompletableFuture
 import kotlinx.coroutines.future.asDeferred
 import kotlinx.coroutines.future.await
 
-class LoadingCacheFacadeImpl<K, V>(
+public class LoadingCacheFacadeImpl<K, V>(
    private val scope: CoroutineScope,
    private val cache: AsyncLoadingCache<K, V>,
 ) : LoadingCacheFacade<K, V> {
