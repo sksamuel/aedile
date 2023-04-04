@@ -1,14 +1,14 @@
 package com.sksamuel.aedile.micrometer
 
-import com.sksamuel.aedile.core.Cache
-import com.sksamuel.aedile.core.LoadingCache
+import com.sksamuel.aedile.core.CacheFacade
+import com.sksamuel.aedile.core.LoadingCacheFacade
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Tag
 import io.micrometer.core.instrument.binder.MeterBinder
 import io.micrometer.core.instrument.binder.cache.CaffeineCacheMetrics
 
 class CacheMetrics<K, V>(
-   private val cache: Cache<K, V>,
+   private val cache: CacheFacade<K, V>,
    private val cacheName: String,
    private val tags: Collection<Tag> = emptyList()
 ) : MeterBinder {
@@ -20,7 +20,7 @@ class CacheMetrics<K, V>(
 }
 
 class LoadingCacheMetrics<K, V>(
-   private val cache: LoadingCache<K, V>,
+   private val cache: LoadingCacheFacade<K, V>,
    private val cacheName: String,
    private val tags: Collection<Tag> = emptyList()
 ) : MeterBinder {

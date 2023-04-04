@@ -5,6 +5,8 @@ import com.github.benmanes.caffeine.cache.Caffeine
 import com.github.benmanes.caffeine.cache.Expiry
 import com.github.benmanes.caffeine.cache.RemovalCause
 import com.github.benmanes.caffeine.cache.stats.StatsCounter
+import kotlin.time.Duration
+import kotlin.time.toJavaDuration
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
@@ -13,8 +15,6 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.future.asCompletableFuture
 import kotlinx.coroutines.launch
-import kotlin.time.Duration
-import kotlin.time.toJavaDuration
 
 data class Configuration<K, V>(
 
@@ -146,7 +146,7 @@ class Builder<K, V>(
 ) {
 
    /**
-    * Returns a [Cache] which suspends when requesting values.
+    * Returns a [CacheFacade] which suspends when requesting values.
     *
     * If the key is not present in the cache, returns null, unless a compute function
     * is provided with the key.
@@ -154,12 +154,12 @@ class Builder<K, V>(
     * If the suspendable computation throws or computes a null value then the
     * entry will be automatically removed.
     */
-   fun build(): Cache<K, V> {
-      return Cache(scope, caffeine.buildAsync())
+   fun build(): CacheFacade<K, V> {
+      return CacheFacadeImpl(scope, caffeine.buildAsync())
    }
 
    /**
-    * Returns a [Cache] which suspends when requesting values.
+    * Returns a [LoadingCacheFacade] which suspends when requesting values.
     *
     * If the key does not exist, then the suspendable [compute] function is invoked
     * to compute a value, unless a specific compute has been provided with the key.
@@ -168,12 +168,15 @@ class Builder<K, V>(
     * entry will be automatically removed.
     *
     */
-   fun build(compute: suspend (K) -> V): LoadingCache<K, V> {
-      return LoadingCache(scope, caffeine.buildAsync { key, _ -> scope.async { compute(key) }.asCompletableFuture() })
+   fun build(compute: suspend (K) -> V): LoadingCacheFacade<K, V> {
+      return LoadingCacheFacadeImpl(
+         scope = scope,
+         cache = caffeine.buildAsync { key, _ -> scope.async { compute(key) }.asCompletableFuture() },
+      )
    }
 
    /**
-    * Returns a [Cache] which suspends when requesting values.
+    * Returns a [LoadingCacheFacade] which suspends when requesting values.
     *
     * If a requested key does not exist, then the suspendable [compute] function is invoked
     * to compute the required values.
@@ -182,8 +185,8 @@ class Builder<K, V>(
     * entry will be automatically removed.
     *
     */
-   fun buildAll(compute: suspend (Set<K>) -> Map<K, V>): LoadingCache<K, V> {
-      return LoadingCache(
+   fun buildAll(compute: suspend (Set<K>) -> Map<K, V>): LoadingCacheFacade<K, V> {
+      return LoadingCacheFacadeImpl(
          scope,
          caffeine.buildAsync(AsyncCacheLoader.bulk { keys, _ ->
             scope.async { compute(keys) }.asCompletableFuture()
