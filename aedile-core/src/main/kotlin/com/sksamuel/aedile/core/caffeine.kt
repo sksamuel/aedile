@@ -13,8 +13,6 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.future.asCompletableFuture
 import kotlinx.coroutines.launch
-import java.util.concurrent.CompletableFuture
-import java.util.concurrent.Executor
 import kotlin.time.Duration
 import kotlin.time.toJavaDuration
 
@@ -187,17 +185,8 @@ class Builder<K, V>(
    fun buildAll(compute: suspend (Set<K>) -> Map<K, V>): LoadingCache<K, V> {
       return LoadingCache(
          scope,
-         caffeine.buildAsync(object : AsyncCacheLoader<K, V> {
-            override fun asyncLoad(key: K, executor: Executor?): CompletableFuture<V> {
-               return asyncLoadAll(setOf(key), executor).thenApply { results -> results[key] }
-            }
-
-            override fun asyncLoadAll(
-               keys: Set<K>,
-               executor: Executor?,
-            ): CompletableFuture<Map<K, V>> {
-               return scope.async { compute(keys) }.asCompletableFuture()
-            }
+         caffeine.buildAsync(AsyncCacheLoader.bulk { keys, _ ->
+            scope.async { compute(keys) }.asCompletableFuture()
          })
       )
    }
