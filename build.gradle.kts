@@ -15,7 +15,7 @@ buildscript {
 plugins {
    signing
    `maven-publish`
-   kotlin("jvm")
+   kotlin("jvm").version("1.7.22")
 }
 
 allprojects {
@@ -33,13 +33,8 @@ allprojects {
    }
 
    dependencies {
-      implementation(KotlinX.coroutines.core)
-      implementation(KotlinX.coroutines.jdk8)
-
-      testImplementation(Testing.kotest.framework.datatest)
-      testImplementation(Testing.kotest.runner.junit5)
-      testImplementation(Testing.kotest.assertions.core)
-      testImplementation(Testing.kotest.property)
+      api(rootProject.libs.coroutines.core)
+      api(rootProject.libs.coroutines.jdk8)
    }
 
    tasks.named<Test>("test") {

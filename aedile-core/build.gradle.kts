@@ -1,5 +1,5 @@
 dependencies {
-   api("com.github.ben-manes.caffeine:caffeine:_")
+   api(libs.caffeine)
 }
 
 apply("../publish.gradle.kts")
