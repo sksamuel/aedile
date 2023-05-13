@@ -1,5 +1,15 @@
 # Changelog
 
+### 1.2.2
+
+* Added support for `softValues`
+* Added support for `removalListener`
+* Updated dependencies on `caffeine` to 3.1.6  and `micrometer` (in the optional `aedile-micrometer` module) to 1.11.0
+
+### 1.2.1
+
+* Added support for `buildAll`.
+*
 ### 1.2.0
 
 * Added `contains` operation to return a Boolean if the cache contains a given key
