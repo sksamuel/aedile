@@ -73,14 +73,15 @@ data class Configuration<K, V>(
 
    /**
     * Specifies a listener that is notified each time an entry is evicted.
-    *
-    * The cache will invoke this listener during the atomic operation to remove the entry.
-    * In the case of expiration or reference collection, the entry may be pending removal
-    * and will be discarded as part of the routine maintenance.
-    *
     * See full docs at [Caffeine.evictionListener].
     */
    var evictionListener: suspend (K?, V?, RemovalCause) -> Unit = { _, _, _ -> },
+
+   /**
+    * Specifies a listener that is notified each time an entry is removed.
+    * See full docs at [Caffeine.removalListener].
+    */
+   var removalListener: suspend (K?, V?, RemovalCause) -> Unit = { _, _, _ -> },
 
    /**
     * Sets the minimum total size for the internal data structures.
@@ -115,6 +116,14 @@ fun <K, V> caffeineBuilder(configure: Configuration<K, V>.() -> Unit = {}): Buil
 
    c.evictionListener.let { listener ->
       caffeine.evictionListener<K, V> { key, value, cause ->
+         scope.launch {
+            listener.invoke(key, value, cause)
+         }
+      }
+   }
+
+   c.removalListener.let { listener ->
+      caffeine.removalListener<K, V> { key, value, cause ->
          scope.launch {
             listener.invoke(key, value, cause)
          }

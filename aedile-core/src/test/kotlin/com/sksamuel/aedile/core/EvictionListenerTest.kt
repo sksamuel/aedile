@@ -7,7 +7,7 @@ import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.seconds
 
-class EvictionTest : FunSpec() {
+class EvictionListenerTest : FunSpec() {
    init {
       test("cache should support eviction functions") {
          var cause: RemovalCause? = null
