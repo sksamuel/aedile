@@ -9,7 +9,7 @@
 ### 1.2.1
 
 * Added support for `buildAll`.
-*
+
 ### 1.2.0
 
 * Added `contains` operation to return a Boolean if the cache contains a given key
