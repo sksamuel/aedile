@@ -42,9 +42,16 @@ data class Configuration<K, V>(
    var expireAfterWrite: Duration? = null,
 
    /**
+    * Specifies that each key (not value) stored in the cache should be wrapped in a WeakReference.
     * See full docs at [Caffeine.weakKeys].
     */
    var weakKeys: Boolean? = null,
+
+   /**
+    * Specifies that each value (not key) stored in the cache should be wrapped in a SoftReference.
+    * See full docs at [Caffeine.softValues].
+    */
+   var softValues: Boolean? = null,
 
    /**
     * See full docs at [Caffeine.maximumWeight].
@@ -145,6 +152,7 @@ fun <K, V> caffeineBuilder(configure: Configuration<K, V>.() -> Unit = {}): Buil
    c.statsCounter?.let { counter -> caffeine.recordStats { counter } }
 
    if (c.weakKeys == true) caffeine.weakKeys()
+   if (c.softValues == true) caffeine.softValues()
 
    return Builder(scope, caffeine)
 }
