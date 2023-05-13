@@ -35,6 +35,7 @@ allprojects {
    dependencies {
       api(rootProject.libs.coroutines.core)
       api(rootProject.libs.coroutines.jdk8)
+      testApi(rootProject.libs.bundles.testing)
    }
 
    tasks.named<Test>("test") {
