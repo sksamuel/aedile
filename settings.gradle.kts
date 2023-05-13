@@ -16,7 +16,7 @@ dependencyResolutionManagement {
          library("coroutines-core", "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutines")
          library("coroutines-jdk8", "org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:$coroutines")
 
-         library("caffeine", "com.github.ben-manes.caffeine:caffeine:3.1.5")
+         library("caffeine", "com.github.ben-manes.caffeine:caffeine:3.1.6")
          library("micrometer-core", "io.micrometer:micrometer-core:1.11.0")
 
          val kotest = "5.5.4"
