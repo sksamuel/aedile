@@ -39,7 +39,7 @@ With this cache we can request values if present, or supply a suspendable functi
 ```kotlin
 val value1 = cache.getIfPresent("foo") // value or null
 
-val value2 = cache.getOrPut("foo") {
+val value2 = cache.get("foo") {
    delay(100) // look ma, we support suspendable functions!
    "value"
 }
