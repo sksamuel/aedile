@@ -8,12 +8,14 @@ import com.github.benmanes.caffeine.cache.stats.StatsCounter
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.future.asCompletableFuture
 import kotlinx.coroutines.launch
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.nanoseconds
 import kotlin.time.toJavaDuration
 
 data class Configuration<K, V>(
@@ -108,6 +110,8 @@ data class Configuration<K, V>(
     * See full docs at [Caffeine.weigher].
     */
    var weigher: ((K, V) -> Int)? = null,
+
+   var scheduler: Scheduler? = null,
 )
 
 /**
@@ -154,7 +158,20 @@ fun <K, V> caffeineBuilder(configure: Configuration<K, V>.() -> Unit = {}): Buil
    if (c.weakKeys == true) caffeine.weakKeys()
    if (c.softValues == true) caffeine.softValues()
 
+   c.scheduler?.let { scheduler ->
+      caffeine.scheduler { _, command, delay, unit ->
+         scheduler.schedule(
+            { command.run() },
+            unit.toNanos(delay).nanoseconds,
+         ).asCompletableFuture()
+      }
+   }
+
    return Builder(scope, caffeine)
+}
+
+fun interface Scheduler {
+   fun schedule(command: () -> Unit, duration: Duration): Deferred<Unit>
 }
 
 class Builder<K, V>(
