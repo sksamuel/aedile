@@ -1,5 +1,9 @@
 # Changelog
 
+###
+
+* Added support for custom schedulers
+
 ### 1.2.2
 
 * Added support for `softValues`
