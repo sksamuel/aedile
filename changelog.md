@@ -1,6 +1,6 @@
 # Changelog
 
-###
+### 1.2.3
 
 * Added support for custom schedulers
 
