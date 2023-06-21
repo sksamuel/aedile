@@ -14,6 +14,8 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.future.asCompletableFuture
 import kotlinx.coroutines.launch
+import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.coroutineContext
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.nanoseconds
 import kotlin.time.toJavaDuration
@@ -112,6 +114,11 @@ data class Configuration<K, V>(
    var weigher: ((K, V) -> Int)? = null,
 
    var scheduler: Scheduler? = null,
+
+   /**
+    * Controls whether the [CoroutineContext] of the caller is used for call site computations
+    */
+   var useCallingContext: Boolean = false,
 )
 
 /**
@@ -124,6 +131,10 @@ fun <K, V> caffeineBuilder(configure: Configuration<K, V>.() -> Unit = {}): Buil
    val caffeine = Caffeine.newBuilder()
 
    val scope = c.scope ?: CoroutineScope(c.dispatcher + CoroutineName("Aedile-Caffeine-Scope") + SupervisorJob())
+
+   val scopeProvider: suspend () -> CoroutineScope = {
+      if (c.useCallingContext) CoroutineScope(coroutineContext) else scope
+   }
 
    c.evictionListener.let { listener ->
       caffeine.evictionListener<K, V> { key, value, cause ->
@@ -167,7 +178,7 @@ fun <K, V> caffeineBuilder(configure: Configuration<K, V>.() -> Unit = {}): Buil
       }
    }
 
-   return Builder(scope, caffeine)
+   return Builder(scope, caffeine, scopeProvider)
 }
 
 fun interface Scheduler {
@@ -177,6 +188,7 @@ fun interface Scheduler {
 class Builder<K, V>(
    private val scope: CoroutineScope,
    private val caffeine: Caffeine<Any, Any>,
+   private val scopeProvider: suspend () -> CoroutineScope = { scope },
 ) {
 
    /**
@@ -189,7 +201,7 @@ class Builder<K, V>(
     * entry will be automatically removed.
     */
    fun build(): Cache<K, V> {
-      return Cache(scope, caffeine.buildAsync())
+      return Cache(scope, caffeine.buildAsync(), scopeProvider)
    }
 
    /**
@@ -203,7 +215,11 @@ class Builder<K, V>(
     *
     */
    fun build(compute: suspend (K) -> V): LoadingCache<K, V> {
-      return LoadingCache(scope, caffeine.buildAsync { key, _ -> scope.async { compute(key) }.asCompletableFuture() })
+      return LoadingCache(
+         scope,
+         caffeine.buildAsync { key, _ -> scope.async { compute(key) }.asCompletableFuture() },
+         scopeProvider,
+      )
    }
 
    /**
@@ -221,7 +237,8 @@ class Builder<K, V>(
          scope,
          caffeine.buildAsync(AsyncCacheLoader.bulk { keys, _ ->
             scope.async { compute(keys) }.asCompletableFuture()
-         })
+         }),
+         scopeProvider,
       )
    }
 }

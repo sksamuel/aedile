@@ -2,8 +2,10 @@ package com.sksamuel.aedile.core
 
 import io.kotest.assertions.throwables.shouldThrowAny
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 
 class LoadingCacheTest : FunSpec() {
    init {
@@ -162,6 +164,52 @@ class LoadingCacheTest : FunSpec() {
          cache.put("wibble", "wobble")
          cache.contains("wibble") shouldBe true
          cache.contains("bubble") shouldBe false
+      }
+
+      test("LoadingCache.get should supports LocalThreadContextElements with useCallingContext = true") {
+         val cache = caffeineBuilder<String, String> {
+            useCallingContext = true
+         }.build()
+         withContext(BooleanThreadContextElement(true)) {
+            cache.get("foo") {
+               booleanThreadLocal.get().shouldBeTrue()
+               "bar"
+            } shouldBe "bar"
+         }
+      }
+
+      test("LoadingCache.put should support LocalThreadContextElements with useCallingContext = true") {
+         val cache = caffeineBuilder<String, String> {
+            useCallingContext = true
+         }.build()
+         withContext(BooleanThreadContextElement(true)) {
+            cache.put("foo") {
+               booleanThreadLocal.get().shouldBeTrue()
+               "bar"
+            }
+            cache.getIfPresent("foo") shouldBe "bar"
+         }
+      }
+
+      test("LoadingCache.getAll should support LocalThreadContextElements with useCallingContext = true") {
+         val cache = caffeineBuilder<String, String> {
+            useCallingContext = true
+         }.build()
+         withContext(BooleanThreadContextElement(true)) {
+            cache.put("foo") {
+               "wobble"
+            }
+            cache.put("bar") {
+               "wibble"
+            }
+            cache.put("baz") {
+               "wubble"
+            }
+            cache.getAll(listOf("foo", "bar", "baz")) {
+               booleanThreadLocal.get().shouldBeTrue()
+               mapOf("baz" to "wubble")
+            } shouldBe mapOf("foo" to "wobble", "bar" to "wibble", "baz" to "wubble")
+         }
       }
    }
 }

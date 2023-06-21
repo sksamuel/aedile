@@ -9,7 +9,11 @@ import kotlinx.coroutines.future.asDeferred
 import kotlinx.coroutines.future.await
 import java.util.concurrent.CompletableFuture
 
-class LoadingCache<K, V>(private val scope: CoroutineScope, private val cache: AsyncLoadingCache<K, V>) {
+class LoadingCache<K, V>(
+   private val scope: CoroutineScope,
+   private val cache: AsyncLoadingCache<K, V>,
+   private val scopeProvider: suspend () -> CoroutineScope =  { scope },
+) {
 
    fun underlying(): AsyncLoadingCache<K, V> = cache
 
@@ -56,6 +60,7 @@ class LoadingCache<K, V>(private val scope: CoroutineScope, private val cache: A
     * If the suspendable computation throws, the entry will be automatically removed from this cache.
     */
    suspend fun get(key: K, compute: suspend (K) -> V): V {
+      val scope = scopeProvider()
       return cache.get(key) { k, _ -> scope.async { compute(k) }.asCompletableFuture() }.await()
    }
 
@@ -74,6 +79,7 @@ class LoadingCache<K, V>(private val scope: CoroutineScope, private val cache: A
     * @param compute the suspendable function that generate the value.
     */
    suspend fun put(key: K, compute: suspend () -> V) {
+      val scope = scopeProvider()
       cache.put(key, scope.async { compute() }.asCompletableFuture())
    }
 
