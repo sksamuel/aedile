@@ -14,6 +14,8 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.future.asCompletableFuture
 import kotlinx.coroutines.launch
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.Executor
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.nanoseconds
 import kotlin.time.toJavaDuration
@@ -204,6 +206,31 @@ class Builder<K, V>(
     */
    fun build(compute: suspend (K) -> V): LoadingCache<K, V> {
       return LoadingCache(scope, caffeine.buildAsync { key, _ -> scope.async { compute(key) }.asCompletableFuture() })
+   }
+
+   /**
+    * Returns a [Cache] which suspends when requesting values.
+    *
+    * If the key does not exist, then the suspendable [compute] function is invoked
+    * to compute a value, unless a specific compute has been provided with the key.
+    *
+    * If the suspendable computation throws or computes a null value then the
+    * entry will be automatically removed.
+    *
+    * The [reloadCompute] function is invoked to refresh an entry if refreshAfterWrite
+    * is enabled or refresh is invoked. See full docs [AsyncCacheLoader.asyncReload].
+    *
+    */
+   fun build(compute: suspend (K) -> V, reloadCompute: suspend (K, V) -> V): LoadingCache<K, V> {
+      return LoadingCache(scope, caffeine.buildAsync(object : AsyncCacheLoader<K, V> {
+         override fun asyncLoad(key: K, executor: Executor?): CompletableFuture<out V> {
+            return scope.async { compute(key) }.asCompletableFuture()
+         }
+
+         override fun asyncReload(key: K, oldValue: V, executor: Executor?): CompletableFuture<out V> {
+            return scope.async { reloadCompute(key, oldValue) }.asCompletableFuture()
+         }
+      }))
    }
 
    /**
