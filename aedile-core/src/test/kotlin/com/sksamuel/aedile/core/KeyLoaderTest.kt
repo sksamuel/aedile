@@ -9,14 +9,14 @@ class KeyLoaderTest : FunSpec() {
 
       test("cache should use custom key loader") {
          val cache = caffeineBuilder<String, String>().build()
-         cache.getOrPut("foo") {
+         cache.get("foo") {
             "bar"
          } shouldBe "bar"
       }
 
       test("cache should use support suspendable functions in the key loader") {
          val cache = caffeineBuilder<String, String>().build()
-         cache.getOrPut("foo") {
+         cache.get("foo") {
             delay(1)
             "bar"
          } shouldBe "bar"
