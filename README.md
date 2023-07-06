@@ -1,7 +1,7 @@
 # Aedile
 
 ![main](https://github.com/sksamuel/aedile/workflows/main/badge.svg)
-[<img src="https://img.shields.io/maven-central/v/com.sksamuel.aedile/aedile-core.svg?label=latest%20release"/>](http://search.maven.org/#search%7Cga%7C1%aedile)
+[<img src="https://img.shields.io/maven-central/v/com.sksamuel.aedile/aedile-core.svg?label=latest%20release"/>](https://central.sonatype.com/search?q=aedile)
 [<img src="https://img.shields.io/nexus/s/https/oss.sonatype.org/com.sksamuel.aedile/aedile-core.svg?label=latest%20snapshot&style=plastic"/>](https://oss.sonatype.org/content/repositories/snapshots/com/sksamuel/aedile/aedile-core/)
 
 Aedile is a simple Kotlin wrapper for [Caffeine](https://github.com/ben-manes/caffeine) which prefers coroutines rather
