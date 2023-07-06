@@ -33,6 +33,9 @@ data class Configuration<K, V>(
     */
    var scope: CoroutineScope? = null,
 
+   /**
+    * See full docs at [Caffeine.refreshAfterWrite].
+    */
    var refreshAfterWrite: Duration? = null,
 
    /**

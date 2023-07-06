@@ -21,6 +21,13 @@ class CacheTest : FunSpec() {
          cache.getIfPresent("baz") shouldBe "waz"
       }
 
+      test("Cache should support getOrNull") {
+         val cache = caffeineBuilder<String, String>().build()
+         cache.put("foo", "bar")
+         cache.getOrNull("foo") shouldBe "bar"
+         cache.getOrNull("baqwewqewqz") shouldBe null
+      }
+
       test("Cache.get should support suspendable compute function") {
          val cache = caffeineBuilder<String, String>().build()
          cache.get("foo") {

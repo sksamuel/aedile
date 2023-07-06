@@ -17,6 +17,10 @@ class LoadingCache<K, V>(private val scope: CoroutineScope, private val cache: A
       return cache.getIfPresent(key)?.await() != null
    }
 
+   /**
+    * Returns the value associated with key in this cache, or null if there is no cached future for key.
+    * This method will suspend while the value is fetched.
+    */
    suspend fun getIfPresent(key: K): V? {
       return cache.getIfPresent(key)?.await()
    }

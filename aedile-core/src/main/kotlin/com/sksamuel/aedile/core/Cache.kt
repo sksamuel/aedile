@@ -1,6 +1,7 @@
 package com.sksamuel.aedile.core
 
 import com.github.benmanes.caffeine.cache.AsyncCache
+import com.github.benmanes.caffeine.cache.Caffeine
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
@@ -18,21 +19,29 @@ class Cache<K, V>(private val scope: CoroutineScope, private val cache: AsyncCac
       return cache.getIfPresent(key)?.await() != null
    }
 
+   /**
+    * Returns the value associated with key in this cache, or null if there is no cached future for key.
+    * This method will suspend while the value is fetched.
+    * For a non-suspending alternative, see [getOrNull].
+    */
    suspend fun getIfPresent(key: K): V? {
       return cache.getIfPresent(key)?.await()
    }
 
    /**
+    * Returns the value associated with key in this cache or null if this cache does not
+    * contain an entry for the key. This is a non-suspendable alternative to getIfPresent(key).
+    */
+   fun getOrNull(key: K): V? {
+      return cache.synchronous().getIfPresent(key)
+   }
+
+   /**
     * Returns the value associated with key in this cache, obtaining that value from the
-    * [compute] function if necessary. This method provides a simple substitute for the conventional
-    * "if cached, return; otherwise create, cache and return" pattern.
+    * [compute] function if necessary. This function will suspend while the compute method
+    * is executed. If the suspendable computation throws, the exception will be propagated to the caller.
     *
-    * The instance returned from the compute function will be stored directly into the cache.
-    *
-    * If the specified key is not already associated with a value, attempts to compute its value
-    * and enters it into this cache unless null.
-    *
-    * If the suspendable computation throws, the exception will be propagated to the caller.
+    * See full docs at [AsyncCache.get].
     *
     * @param key the key to lookup in the cache
     * @param compute the suspendable function to generate a value for the given key.
