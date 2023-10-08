@@ -1,5 +1,7 @@
 package com.sksamuel.aedile.core
 
+import com.github.benmanes.caffeine.cache.Caffeine
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.assertions.throwables.shouldThrowAny
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
@@ -52,7 +54,88 @@ class LoadingCacheTest : FunSpec() {
          } shouldBe "wibble"
       }
 
-      test("LoadingCache should handle exceptions in the build compute function") {
+      test("foo") {
+         val cache = Caffeine.newBuilder().build<String, String> {
+            error("kaboom")
+         }
+         cache.get("foo") { "baz" } shouldBe "baz"
+         cache.get("bar") { "baz" } shouldBe "baz"
+      }
+
+      test("get should throw if build compute function throws and key is missing") {
+         val cache = caffeineBuilder<String, String>().build {
+            error("kaput")
+         }
+         shouldThrow<IllegalStateException> {
+            cache.get("foo")
+         }
+      }
+
+      test("getIfPresent should return null if build compute function throws and key is missing") {
+         val cache = caffeineBuilder<String, String>().build {
+            error("kaput")
+         }
+         cache.getIfPresent("foo") shouldBe null
+      }
+
+      test("get should use existing value if build compute function throws and key is present") {
+         val cache = caffeineBuilder<String, String>().build {
+            error("kaput")
+         }
+         cache.get("foo") { "bar" } shouldBe "bar"
+         cache.get("foo") shouldBe "bar"
+      }
+
+      test("get should propagate exceptions if the override throws") {
+         val cache = caffeineBuilder<String, String>().buildAll { keys ->
+            keys.associateWith { "$it-value" }
+         }
+         shouldThrow<IllegalStateException> {
+            cache.get("foo") { error("kapow") }
+         }
+         cache.get("bar") { "baz" } shouldBe "baz"
+      }
+
+      test("getAll should throw if build compute function throws and any key is missing") {
+         val cache = caffeineBuilder<String, String>().build {
+            error("kaput")
+         }
+         shouldThrow<IllegalStateException> {
+            cache.getAll(setOf("foo", "bar"))
+         }
+         delay(100)
+         cache.get("foo") { "baz" } shouldBe "baz"
+         delay(100)
+         shouldThrow<IllegalStateException> {
+            cache.getAll(setOf("bar"))
+         }
+         delay(100)
+         cache.getAll(setOf("foo")) shouldBe mapOf("foo" to "baz")
+      }
+
+      test("getAll should throw if build compute function override throws and any key is missing") {
+         val cache = caffeineBuilder<String, String>().build {
+            "$it-value"
+         }
+         shouldThrow<IllegalStateException> {
+            cache.getAll(setOf("foo", "bar")) { error("boom") }
+         }
+         cache.getAll(setOf("foo")) shouldBe mapOf("foo" to "foo-value")
+         shouldThrow<IllegalStateException> {
+            cache.getAll(setOf("foo", "bar")) { error("boom") }
+         }
+      }
+
+      test("getAll should return existing values if the build function throws but values are present") {
+         val cache = caffeineBuilder<String, String>().build {
+            error("kaput")
+         }
+         cache.get("foo") { "baz" } shouldBe "baz"
+         cache.get("bar") { "faz" } shouldBe "faz"
+         cache.getAll(setOf("foo", "bar")) shouldBe mapOf("foo" to "baz", "bar" to "faz")
+      }
+
+      test("LoadingCache should propagate exceptions in the build compute function override") {
          val cache = caffeineBuilder<String, String>().build {
             delay(1)
             "bar"
@@ -62,12 +145,10 @@ class LoadingCacheTest : FunSpec() {
                error("kapow")
             }
          }
-         cache.get("bar") {
-            "baz"
-         } shouldBe "baz"
+         cache.get("bar") { "baz" } shouldBe "baz"
       }
 
-      test("LoadingCache should handle exceptions in the per-key buildAll compute function") {
+      test("LoadingCache should propagate exceptions in the buildAll compute function override") {
          val cache = caffeineBuilder<String, String>().buildAll { keys ->
             keys.associateWith { "$it-value" }
          }
