@@ -1,7 +1,6 @@
 package com.sksamuel.aedile.core
 
 import com.github.benmanes.caffeine.cache.AsyncCache
-import com.github.benmanes.caffeine.cache.Caffeine
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
@@ -10,8 +9,13 @@ import kotlinx.coroutines.future.asDeferred
 import kotlinx.coroutines.future.await
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executor
+import kotlin.coroutines.coroutineContext
 
-class Cache<K, V>(private val scope: CoroutineScope, private val cache: AsyncCache<K, V>) {
+class Cache<K, V>(
+   private val defaultScope: CoroutineScope,
+   private val useCallingContext: Boolean,
+   private val cache: AsyncCache<K, V>
+) {
 
    fun underlying(): AsyncCache<K, V> = cache
 
@@ -49,6 +53,7 @@ class Cache<K, V>(private val scope: CoroutineScope, private val cache: AsyncCac
     *
     */
    suspend fun get(key: K, compute: suspend (K) -> V): V {
+      val scope = scope()
       return cache.get(key) { k, _ -> scope.async { compute(k) }.asCompletableFuture() }.await()
    }
 
@@ -82,6 +87,7 @@ class Cache<K, V>(private val scope: CoroutineScope, private val cache: AsyncCac
     * @param compute the suspendable function that generate the value.
     */
    suspend fun put(key: K, compute: suspend () -> V) {
+      val scope = scope()
       cache.put(key, scope.async { compute() }.asCompletableFuture())
    }
 
@@ -103,9 +109,8 @@ class Cache<K, V>(private val scope: CoroutineScope, private val cache: AsyncCac
    }
 
    suspend fun getAll(keys: Collection<K>, compute: suspend (Collection<K>) -> Map<K, V>): Map<K, V> {
-      return cache.getAll(
-         keys
-      ) { ks: Set<K>, _: Executor ->
+      val scope = scope()
+      return cache.getAll(keys) { ks: Set<K>, _: Executor ->
          scope.async { compute(ks) }.asCompletableFuture()
       }.await()
    }
@@ -126,5 +131,9 @@ class Cache<K, V>(private val scope: CoroutineScope, private val cache: AsyncCac
     */
    fun invalidateAll() {
       cache.synchronous().invalidateAll()
+   }
+
+   private suspend fun scope(): CoroutineScope {
+      return if (useCallingContext) CoroutineScope(coroutineContext) else defaultScope
    }
 }

@@ -3,30 +3,27 @@ package com.sksamuel.aedile.core
 import com.github.benmanes.caffeine.cache.Caffeine
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.future.asCompletableFuture
 import kotlinx.coroutines.launch
-import kotlin.time.Duration
 import kotlin.time.Duration.Companion.nanoseconds
 import kotlin.time.toJavaDuration
 
 /**
- * Creates a [Builder] which by default uses [Dispatchers.IO] to execute computation functions.
+ * Creates a [Builder] which by default uses the coroutine context from the caller for get/getall compute overrides.
+ * To delegate to a global dispatcher, set the dispatcher in the configuration.
  */
-@Deprecated("Prefer cacheBuilder which defaults to using the calling context for compute function excecution. To use the previous behaviour, use cacheBuilder, and set useCallingContext to false. This deprecated builder retains the previous behaviour.")
-fun <K, V> caffeineBuilder(configure: Configuration<K, V>.() -> Unit = {}): Builder<K, V> {
+fun <K, V> cacheBuilder(configure: Configuration<K, V>.() -> Unit = {}): Builder<K, V> {
 
    val c = Configuration<K, V>()
    c.configure()
    val caffeine = Caffeine.newBuilder()
 
-   val scope = c.scope ?: CoroutineScope(c.dispatcher + CoroutineName("Aedile-Caffeine-Scope") + SupervisorJob())
+   val defaultScope = c.scope ?: CoroutineScope(c.dispatcher + CoroutineName("Aedile-Caffeine-Scope") + SupervisorJob())
 
    c.evictionListener.let { listener ->
       caffeine.evictionListener<K, V> { key, value, cause ->
-         scope.launch {
+         defaultScope.launch {
             listener.invoke(key, value, cause)
          }
       }
@@ -34,7 +31,7 @@ fun <K, V> caffeineBuilder(configure: Configuration<K, V>.() -> Unit = {}): Buil
 
    c.removalListener.let { listener ->
       caffeine.removalListener<K, V> { key, value, cause ->
-         scope.launch {
+         defaultScope.launch {
             listener.invoke(key, value, cause)
          }
       }
@@ -66,11 +63,5 @@ fun <K, V> caffeineBuilder(configure: Configuration<K, V>.() -> Unit = {}): Buil
       }
    }
 
-   return Builder(scope, false, caffeine)
+   return Builder(defaultScope, c.useCallingContext, caffeine)
 }
-
-fun interface Scheduler {
-   fun schedule(command: () -> Unit, duration: Duration): Deferred<Unit>
-}
-
-

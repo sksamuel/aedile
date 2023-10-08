@@ -9,8 +9,13 @@ import kotlinx.coroutines.future.asCompletableFuture
 import kotlinx.coroutines.future.asDeferred
 import kotlinx.coroutines.future.await
 import java.util.concurrent.CompletableFuture
+import kotlin.coroutines.coroutineContext
 
-class LoadingCache<K, V>(private val scope: CoroutineScope, private val cache: AsyncLoadingCache<K, V>) {
+class LoadingCache<K, V>(
+   private val defaultScope: CoroutineScope,
+   private val useCallingContext: Boolean,
+   private val cache: AsyncLoadingCache<K, V>
+) {
 
    fun underlying(): AsyncLoadingCache<K, V> = cache
 
@@ -63,6 +68,7 @@ class LoadingCache<K, V>(private val scope: CoroutineScope, private val cache: A
     * See full docs at [AsyncCache.getAll].
     */
    suspend fun getAll(keys: Collection<K>, compute: suspend (Set<K>) -> Map<K, V>): Map<K, V> {
+      val scope = scope()
       return cache.getAll(keys) { k, _ -> scope.async { compute(k.toSet()) }.asCompletableFuture() }.await()
    }
 
@@ -79,6 +85,7 @@ class LoadingCache<K, V>(private val scope: CoroutineScope, private val cache: A
     * If the suspendable computation throws, the entry will be automatically removed from this cache.
     */
    suspend fun get(key: K, compute: suspend (K) -> V): V {
+      val scope = scope()
       return cache.get(key) { k, _ -> scope.async { compute(k) }.asCompletableFuture() }.await()
    }
 
@@ -97,6 +104,7 @@ class LoadingCache<K, V>(private val scope: CoroutineScope, private val cache: A
     * @param compute the suspendable function that generate the value.
     */
    suspend fun put(key: K, compute: suspend () -> V) {
+      val scope = scope()
       cache.put(key, scope.async { compute() }.asCompletableFuture())
    }
 
@@ -148,5 +156,9 @@ class LoadingCache<K, V>(private val scope: CoroutineScope, private val cache: A
     */
    fun invalidateAll() {
       cache.synchronous().invalidateAll()
+   }
+
+   private suspend fun scope(): CoroutineScope {
+      return if (useCallingContext) CoroutineScope(coroutineContext) else defaultScope
    }
 }

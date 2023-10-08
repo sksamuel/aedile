@@ -12,14 +12,14 @@ dependencyResolutionManagement {
    versionCatalogs {
       create("libs") {
 
-         val coroutines = "1.6.4"
+         val coroutines = "1.7.3"
          library("coroutines-core", "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutines")
          library("coroutines-jdk8", "org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:$coroutines")
 
          library("caffeine", "com.github.ben-manes.caffeine:caffeine:3.1.8")
          library("micrometer-core", "io.micrometer:micrometer-core:1.11.1")
 
-         val kotest = "5.5.4"
+         val kotest = "5.7.2"
          library("kotest-datatest", "io.kotest:kotest-framework-datatest:$kotest")
          library("kotest-junit5", "io.kotest:kotest-runner-junit5:$kotest")
          library("kotest-core", "io.kotest:kotest-assertions-core:$kotest")

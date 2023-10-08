@@ -15,7 +15,7 @@ buildscript {
 plugins {
    signing
    `maven-publish`
-   kotlin("jvm").version("1.7.22")
+   kotlin("jvm").version("1.8.21")
 }
 
 allprojects {
