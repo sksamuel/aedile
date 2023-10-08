@@ -5,7 +5,6 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.Duration.Companion.seconds
 
 class LoadingCacheTest : FunSpec() {
    init {
@@ -53,10 +52,24 @@ class LoadingCacheTest : FunSpec() {
          } shouldBe "wibble"
       }
 
-      test("LoadingCache should handle exceptions in the compute function") {
-         val cache = caffeineBuilder<String, String>().build() {
+      test("LoadingCache should handle exceptions in the build compute function") {
+         val cache = caffeineBuilder<String, String>().build {
             delay(1)
             "bar"
+         }
+         shouldThrowAny {
+            cache.get("foo") {
+               error("kapow")
+            }
+         }
+         cache.get("bar") {
+            "baz"
+         } shouldBe "baz"
+      }
+
+      test("LoadingCache should handle exceptions in the per-key buildAll compute function") {
+         val cache = caffeineBuilder<String, String>().buildAll { keys ->
+            keys.associateWith { "$it-value" }
          }
          shouldThrowAny {
             cache.get("foo") {
@@ -101,6 +114,21 @@ class LoadingCacheTest : FunSpec() {
          cache.getAll(listOf("foo", "bar")) shouldBe mapOf("foo" to "wobble", "bar" to "wibble")
       }
 
+      test("getAll should support suspendable multiple keys loading function override") {
+         val cache = caffeineBuilder<String, String>().buildAll {
+            delay(1)
+            mapOf("tweedle" to "dee", "twuddle" to "dum")
+         }
+         cache.get("tweedle") shouldBe "dee"
+         cache.get("twuddle") shouldBe "dum"
+         cache.getAll(setOf("wibble", "wobble")) {
+            it.associateWith { "$it-value" }
+         } shouldBe mapOf(
+            "wibble" to "wibble-value",
+            "wobble" to "wobble-value"
+         )
+      }
+
       test("LoadingCache should support refreshAfterWrite using refresh compute function") {
          val cache = caffeineBuilder<String, Int> {
             refreshAfterWrite = 10.milliseconds
@@ -112,8 +140,7 @@ class LoadingCacheTest : FunSpec() {
          cache.get("foo") shouldBe 2
       }
 
-      test("LoadingCache should support asMap")
-      {
+      test("LoadingCache should support asMap") {
          val cache = caffeineBuilder<String, String>().build {
             delay(1)
             "bar"
@@ -129,8 +156,7 @@ class LoadingCacheTest : FunSpec() {
          cache.asMap() shouldBe mapOf("foo" to "wobble", "bar" to "wibble")
       }
 
-      test("LoadingCache should support asDeferredMap")
-      {
+      test("LoadingCache should support asDeferredMap") {
          val cache = caffeineBuilder<String, String>().build {
             delay(1)
             "bar"
@@ -148,8 +174,7 @@ class LoadingCacheTest : FunSpec() {
          map["bubble"]?.await() shouldBe "bobble"
       }
 
-      test("LoadingCache.getIfPresent")
-      {
+      test("LoadingCache.getIfPresent") {
          val cache = caffeineBuilder<String, String>().build {
             delay(1)
             "bar"
@@ -159,8 +184,7 @@ class LoadingCacheTest : FunSpec() {
          cache.getIfPresent("foo") shouldBe "baz"
       }
 
-      test("Cache should support invalidate")
-      {
+      test("Cache should support invalidate") {
          val cache: LoadingCache<String, String> = caffeineBuilder<String, String>().build {
             delay(1)
             "bar"
@@ -171,8 +195,7 @@ class LoadingCacheTest : FunSpec() {
          cache.getIfPresent("wibble") shouldBe null
       }
 
-      test("Cache should support contains")
-      {
+      test("Cache should support contains") {
          val cache: LoadingCache<String, String> = caffeineBuilder<String, String>().build {
             delay(1)
             "bar"

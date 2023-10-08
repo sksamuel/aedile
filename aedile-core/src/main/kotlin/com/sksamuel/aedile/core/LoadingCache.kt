@@ -1,5 +1,6 @@
 package com.sksamuel.aedile.core
 
+import com.github.benmanes.caffeine.cache.AsyncCache
 import com.github.benmanes.caffeine.cache.AsyncLoadingCache
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
@@ -42,9 +43,27 @@ class LoadingCache<K, V>(private val scope: CoroutineScope, private val cache: A
     *
     * @param keys the keys to lookup in the cache
     * @return the values in the cache or computed from the global loading function.
+    *
+    * See full docs at [AsyncLoadingCache.getAll].
     */
    suspend fun getAll(keys: Collection<K>): Map<K, V> {
       return cache.getAll(keys).await()
+   }
+
+   /**
+    * Returns the values associated with the given [keys] from this cache, obtaining those values
+    * from the given [compute] function where required.
+    *
+    * If the computation throws, these entries will be removed from the cache, and the exception propagated.
+    *
+    * @param keys the keys to lookup in the cache
+    * @param compute the function to calculate missing keys
+    * @return the values in the cache or computed from the global loading function.
+    *
+    * See full docs at [AsyncCache.getAll].
+    */
+   suspend fun getAll(keys: Collection<K>, compute: suspend (Set<K>) -> Map<K, V>): Map<K, V> {
+      return cache.getAll(keys) { k, _ -> scope.async { compute(k.toSet()) }.asCompletableFuture() }.await()
    }
 
    /**
