@@ -1,6 +1,7 @@
 package com.sksamuel.aedile.core
 
-import io.kotest.assertions.throwables.shouldThrowAny
+import com.github.benmanes.caffeine.cache.Caffeine
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.delay
@@ -36,16 +37,22 @@ class CacheTest : FunSpec() {
          } shouldBe "bar"
       }
 
-      test("cache should handle exceptions in the compute function") {
+      test("cache should propagate exceptions in the get compute function override") {
          val cache = caffeineBuilder<String, String>().build()
-         shouldThrowAny {
+         shouldThrow<IllegalStateException> {
             cache.get("foo") {
                error("kapow")
             }
          }
-         cache.get("bar") {
-            "baz"
-         } shouldBe "baz"
+      }
+
+      test("cache should propagate exceptions in the getAll compute function override") {
+         val cache = caffeineBuilder<String, String>().build()
+         shouldThrow<IllegalStateException> {
+            cache.getAll(setOf("foo", "bar")) {
+               error("kapow")
+            }
+         }
       }
 
       test("Cache should support getAll") {
@@ -66,7 +73,6 @@ class CacheTest : FunSpec() {
             mapOf("baz" to "wubble")
          } shouldBe mapOf("foo" to "wobble", "bar" to "wibble", "baz" to "wubble")
       }
-
 
       test("Cache should support asMap") {
          val cache = caffeineBuilder<String, String>().build()
