@@ -1,10 +1,12 @@
 package com.sksamuel.aedile.core
 
-import com.github.benmanes.caffeine.cache.Caffeine
+import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.yield
 
 class CacheTest : FunSpec() {
    init {
@@ -44,6 +46,21 @@ class CacheTest : FunSpec() {
                error("kapow")
             }
          }
+      }
+
+      test("Cache should support computeIfAbsent") {
+         val cache = caffeineBuilder<String, String>().build()
+         cache.computeIfAbsent("foo") {
+            yield()
+            "bar"
+         } shouldBe "bar"
+         val key = "baz"
+         cache.computeIfAbsent(key) { null }.shouldBeNull()
+         cache.computeIfAbsent(key) { "new value" }.shouldBe("new value")
+         cache.computeIfAbsent(key) { "new value 2" }.shouldBe("new value")
+         cache.computeIfAbsent(key) { null }.shouldBe("new value")
+         shouldNotThrowAny { cache.computeIfAbsent(key) { error("kapow") } }
+         shouldThrow<IllegalStateException> { cache.computeIfAbsent("not present") { error("kapow") } }
       }
 
       test("cache should propagate exceptions in the getAll compute function override") {
