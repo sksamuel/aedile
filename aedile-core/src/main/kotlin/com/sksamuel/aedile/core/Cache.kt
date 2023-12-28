@@ -57,6 +57,23 @@ class Cache<K, V>(
       return cache.get(key) { k, _ -> scope.async { compute(k) }.asCompletableFuture() }.await()
    }
 
+   /**
+    * Returns the value associated with key in this cache, obtaining that value from the
+    * [compute] function if necessary. This function will suspend while the compute method
+    * is executed. If the suspendable computation throws, the exception will be propagated to the caller.
+    *
+    * If the specified key is not already associated with a value, attempts to compute its value asynchronously
+    * and enters it into this cache unless null.
+    *
+    * @param key the key to lookup in the cache
+    * @param compute the suspendable function to generate a value for the given key.
+    * @return the present value, the computed value, or throws.
+    */
+   suspend fun computeIfAbsent(key: K, compute: suspend (K) -> V?): V? {
+      val scope = scope()
+      return cache.get(key) { k, _ -> scope.async { compute(k) }.asCompletableFuture() }.await()
+   }
+
    @Deprecated("use get", ReplaceWith("get(key, compute)"))
    suspend fun getOrPut(key: K, compute: suspend (K) -> V): V = get(key, compute)
 
