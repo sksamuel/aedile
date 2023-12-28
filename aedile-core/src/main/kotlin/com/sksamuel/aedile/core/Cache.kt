@@ -69,7 +69,7 @@ class Cache<K, V>(
     * @param compute the suspendable function to generate a value for the given key.
     * @return the present value, the computed value, or throws.
     */
-   suspend fun computeIfAbsent(key: K, compute: suspend (K) -> V?): V? {
+   suspend fun getOrNull(key: K, compute: suspend (K) -> V?): V? {
       val scope = scope()
       return cache.get(key) { k, _ -> scope.async { compute(k) }.asCompletableFuture() }.await()
    }

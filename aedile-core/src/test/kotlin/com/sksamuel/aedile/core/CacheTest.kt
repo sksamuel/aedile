@@ -50,17 +50,17 @@ class CacheTest : FunSpec() {
 
       test("Cache should support computeIfAbsent") {
          val cache = caffeineBuilder<String, String>().build()
-         cache.computeIfAbsent("foo") {
+         cache.getOrNull("foo") {
             yield()
             "bar"
          } shouldBe "bar"
          val key = "baz"
-         cache.computeIfAbsent(key) { null }.shouldBeNull()
-         cache.computeIfAbsent(key) { "new value" }.shouldBe("new value")
-         cache.computeIfAbsent(key) { "new value 2" }.shouldBe("new value")
-         cache.computeIfAbsent(key) { null }.shouldBe("new value")
-         shouldNotThrowAny { cache.computeIfAbsent(key) { error("kapow") } }
-         shouldThrow<IllegalStateException> { cache.computeIfAbsent("not present") { error("kapow") } }
+         cache.getOrNull(key) { null }.shouldBeNull()
+         cache.getOrNull(key) { "new value" }.shouldBe("new value")
+         cache.getOrNull(key) { "new value 2" }.shouldBe("new value")
+         cache.getOrNull(key) { null }.shouldBe("new value")
+         shouldNotThrowAny { cache.getOrNull(key) { error("kapow") } }
+         shouldThrow<IllegalStateException> { cache.getOrNull("not present") { error("kapow") } }
       }
 
       test("cache should propagate exceptions in the getAll compute function override") {
