@@ -27,11 +27,11 @@ Add Aedile to your build:
 implementation 'com.sksamuel.aedile:aedile-core:<version>'
 ```
 
-Next, in your code, create a cache through the cache builder with the `caffeineBuilder()` function,
+Next, in your code, create a cache through the cache builder with the `cacheBuilder()` function,
 supplying the key / value types.
 
 ```kotlin
-val cache = caffeineBuilder<String, String>().build()
+val cache = cacheBuilder<String, String>().build()
 ```
 
 With this cache we can request values if present, or supply a suspendable function to compute them.
@@ -48,7 +48,7 @@ val value2 = cache.get("foo") {
 The build function supports a generic compute function which is used if no specific compute function is provided.
 
 ```kotlin
-val cache = caffeineBuilder<String, String>().build {
+val cache = cacheBuilder<String, String>().build {
    delay(1)
    "value"
 }
@@ -66,7 +66,7 @@ these options are ignored.
 To configure the builder we supply a configuration lambda:
 
 ```kotlin
-val cache = caffeineBuilder<String, String> {
+val cache = cacheBuilder<String, String> {
    maximumSize = 100
    initialCapacity = 10
 }.build()
@@ -92,7 +92,7 @@ Caffeine provides different approaches to eviction:
 You can specify a suspendable function to listen to evictions:
 
 ```kotlin
-val cache = caffeineBuilder<String, String> {
+val cache = cacheBuilder<String, String> {
    evictionListener = { key, value, cause ->
       when (cause) {
          RemovalCause.SIZE -> println("Removed due to size constraints")
@@ -109,7 +109,7 @@ dispatcher when configuring the builder.
 
 ```kotlin
 val cacheDispatcher = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
-val cache = caffeineBuilder<String, String>() {
+val cache = cacheBuilder<String, String>() {
    this.dispatcher = cacheDispatcher
 }.build()
 ```

@@ -1,5 +1,17 @@
 # Changelog
 
+### 1.3.1
+
+* Added `getOrNull` with compute that allows for the compute function to return nulls.
+
+### 1.3.0
+
+* Deprecated `caffeineBuilder` for `cacheBuilder`. This new builder defaults to using the calling context for compute
+  function excecution. To use the previous behaviour, use `cacheBuilder`, and set `useCallingContext` to false. The
+  deprecated builder retains the previous behaviour.
+* Added `getOrNull` as a non suspendable version of `getIfPresent`.
+* Added `getAll` with bulk compute.
+
 ### 1.2.3
 
 * Added support for custom schedulers
@@ -8,7 +20,7 @@
 
 * Added support for `softValues`
 * Added support for `removalListener`
-* Updated dependencies on `caffeine` to 3.1.6  and `micrometer` (in the optional `aedile-micrometer` module) to 1.11.0
+* Updated dependencies on `caffeine` to 3.1.6 and `micrometer` (in the optional `aedile-micrometer` module) to 1.11.0
 
 ### 1.2.1
 
