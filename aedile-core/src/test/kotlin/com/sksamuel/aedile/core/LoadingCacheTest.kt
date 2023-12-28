@@ -1,10 +1,13 @@
 package com.sksamuel.aedile.core
 
+import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.supervisorScope
+import kotlinx.coroutines.yield
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -61,6 +64,20 @@ class LoadingCacheTest : FunSpec() {
          shouldThrow<IllegalStateException> {
             cache.get("foo")
          }
+      }
+
+      test("Cache should support getOrNull with compute") {
+         val cache = cacheBuilder<String, String>().build { "boo" }
+         cache.getOrNull("foo") {
+            yield()
+            "bar"
+         } shouldBe "bar"
+         val key = "baz"
+         cache.getOrNull(key) { null }.shouldBeNull()
+         cache.getOrNull(key) { "new value" }.shouldBe("new value")
+         cache.getOrNull(key) { "new value 2" }.shouldBe("new value")
+         cache.getOrNull(key) { null }.shouldBe("new value")
+         shouldNotThrowAny { cache.getOrNull(key) { error("kapow") } }
       }
 
       test("getIfPresent should return null if build compute function throws and key is missing") {

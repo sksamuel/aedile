@@ -48,7 +48,7 @@ class CacheTest : FunSpec() {
          }
       }
 
-      test("Cache should support computeIfAbsent") {
+      test("Cache should support getOrNull with compute") {
          val cache = caffeineBuilder<String, String>().build()
          cache.getOrNull("foo") {
             yield()

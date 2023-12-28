@@ -41,7 +41,8 @@ class Builder<K, V>(
       return LoadingCache(
          defaultScope,
          useCallingContext,
-         caffeine.buildAsync { key, _ -> defaultScope.async { compute(key) }.asCompletableFuture() })
+         caffeine.buildAsync { key, _ -> defaultScope.async { compute(key) }.asCompletableFuture() }
+      )
    }
 
    /**

@@ -45,14 +45,14 @@ class Cache<K, V>(
     * [compute] function if necessary. This function will suspend while the compute method
     * is executed. If the suspendable computation throws, the exception will be propagated to the caller.
     *
-    * See full docs at [AsyncCache.get].
+    * If the specified key is not already associated with a value, attempts to compute its value asynchronously
+    * and enters it into this cache unless null.
     *
     * @param key the key to lookup in the cache
     * @param compute the suspendable function to generate a value for the given key.
     * @return the present value, the computed value, or throws.
-    *
     */
-   suspend fun get(key: K, compute: suspend (K) -> V): V {
+   suspend fun getOrNull(key: K, compute: suspend (K) -> V?): V? {
       val scope = scope()
       return cache.get(key) { k, _ -> scope.async { compute(k) }.asCompletableFuture() }.await()
    }
@@ -62,14 +62,14 @@ class Cache<K, V>(
     * [compute] function if necessary. This function will suspend while the compute method
     * is executed. If the suspendable computation throws, the exception will be propagated to the caller.
     *
-    * If the specified key is not already associated with a value, attempts to compute its value asynchronously
-    * and enters it into this cache unless null.
+    * See full docs at [AsyncCache.get].
     *
     * @param key the key to lookup in the cache
     * @param compute the suspendable function to generate a value for the given key.
     * @return the present value, the computed value, or throws.
+    *
     */
-   suspend fun getOrNull(key: K, compute: suspend (K) -> V?): V? {
+   suspend fun get(key: K, compute: suspend (K) -> V): V {
       val scope = scope()
       return cache.get(key) { k, _ -> scope.async { compute(k) }.asCompletableFuture() }.await()
    }
