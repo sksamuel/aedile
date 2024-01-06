@@ -104,7 +104,7 @@ val cache = cacheBuilder<String, String> {
 
 ## Specify Dispatchers
 
-By default, Aedile will use `Dispatchers.IO` for executing the compute functions. You can specify your own
+By default, Aedile will use the dispatcher from the calling function for executing the compute functions. You can specify your own
 dispatcher when configuring the builder.
 
 ```kotlin
