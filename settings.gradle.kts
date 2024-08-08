@@ -19,7 +19,7 @@ dependencyResolutionManagement {
          library("caffeine", "com.github.ben-manes.caffeine:caffeine:3.1.8")
          library("micrometer-core", "io.micrometer:micrometer-core:1.13.2")
 
-         val kotest = "5.7.2"
+         val kotest = "5.9.1"
          library("kotest-datatest", "io.kotest:kotest-framework-datatest:$kotest")
          library("kotest-junit5", "io.kotest:kotest-runner-junit5:$kotest")
          library("kotest-core", "io.kotest:kotest-assertions-core:$kotest")
