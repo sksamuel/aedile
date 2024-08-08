@@ -12,7 +12,7 @@ dependencyResolutionManagement {
    versionCatalogs {
       create("libs") {
 
-         val coroutines = "1.7.3"
+         val coroutines = "1.8.1"
          library("coroutines-core", "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutines")
          library("coroutines-jdk8", "org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:$coroutines")
 
