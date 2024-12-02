@@ -25,7 +25,8 @@ jobs:
       - name: Setup JDK
         uses: actions/setup-java@v4
         with:
-          java-version: '11'
+           distribution: 'adopt'
+           java-version: '11'
 
       - name: deploy to sonatype
         run: ./gradlew publish
