@@ -7,6 +7,7 @@ import io.micrometer.core.instrument.Tag
 import io.micrometer.core.instrument.binder.MeterBinder
 import io.micrometer.core.instrument.binder.cache.CaffeineCacheMetrics
 
+@Deprecated("Use CaffeineCacheMetrics directly")
 class CacheMetrics<K, V>(
    private val cache: Cache<K, V>,
    private val cacheName: String,
@@ -19,6 +20,7 @@ class CacheMetrics<K, V>(
    }
 }
 
+@Deprecated("Use CaffeineCacheMetrics directly")
 class LoadingCacheMetrics<K, V>(
    private val cache: LoadingCache<K, V>,
    private val cacheName: String,
