@@ -12,8 +12,8 @@ import java.util.concurrent.Executor
 import kotlin.coroutines.coroutineContext
 
 class Cache<K, V>(
-   private val defaultScope: CoroutineScope,
-   private val useCallingContext: Boolean,
+   @Deprecated("This should be ignored - use overloaded methods") private val defaultScope: CoroutineScope,
+   @Deprecated("This should be ignored - use overloaded methods") private val useCallingContext: Boolean,
    private val cache: AsyncCache<K, V>
 ) {
 
@@ -43,6 +43,40 @@ class Cache<K, V>(
    /**
     * Returns the value associated with key in this cache, obtaining that value from the
     * [compute] function if necessary. This function will suspend while the compute method
+    * is executed.
+    *
+    * If the suspendable computation throws, the exception will be propagated to the caller.
+    *
+    * See full docs at [AsyncCache.get].
+    *
+    * @param key the key to lookup in the cache
+    * @param compute the suspendable function to generate a value for the given key.
+    * @return the present value, the computed value, or throws.
+    *
+    */
+   suspend fun get(key: K, compute: suspend (K) -> V): V {
+      val scope = scope()
+      var error: Throwable? = null
+      val value = cache.get(key) { k, _ ->
+         scope.async {
+            // if compute throws, then it will cause the parent coroutine to be cancelled as well
+            // we don't want that, as want to throw the exception back to the caller.
+            // so we must capture it and throw it manually
+            try {
+               compute(k)
+            } catch (e: Throwable) {
+               error = e
+               null
+            }
+         }.asCompletableFuture()
+      }.await()
+      error?.let { throw it }
+      return value
+   }
+
+   /**
+    * Returns the value associated with key in this cache, obtaining that value from the
+    * [compute] function if necessary. This function will suspend while the compute method
     * is executed. If the suspendable computation throws, the exception will be propagated to the caller.
     *
     * If the specified key is not already associated with a value, attempts to compute its value asynchronously
@@ -56,26 +90,6 @@ class Cache<K, V>(
       val scope = scope()
       return cache.get(key) { k, _ -> scope.async { compute(k) }.asCompletableFuture() }.await()
    }
-
-   /**
-    * Returns the value associated with key in this cache, obtaining that value from the
-    * [compute] function if necessary. This function will suspend while the compute method
-    * is executed. If the suspendable computation throws, the exception will be propagated to the caller.
-    *
-    * See full docs at [AsyncCache.get].
-    *
-    * @param key the key to lookup in the cache
-    * @param compute the suspendable function to generate a value for the given key.
-    * @return the present value, the computed value, or throws.
-    *
-    */
-   suspend fun get(key: K, compute: suspend (K) -> V): V {
-      val scope = scope()
-      return cache.get(key) { k, _ -> scope.async { compute(k) }.asCompletableFuture() }.await()
-   }
-
-   @Deprecated("use get", ReplaceWith("get(key, compute)"))
-   suspend fun getOrPut(key: K, compute: suspend (K) -> V): V = get(key, compute)
 
    /**
     * Associates a computed value with the given [key] in this cache.
@@ -127,9 +141,22 @@ class Cache<K, V>(
 
    suspend fun getAll(keys: Collection<K>, compute: suspend (Collection<K>) -> Map<K, V>): Map<K, V> {
       val scope = scope()
-      return cache.getAll(keys) { ks: Set<K>, _: Executor ->
-         scope.async { compute(ks) }.asCompletableFuture()
+      var error: Throwable? = null
+      val value = cache.getAll(keys) { ks: Set<K>, _: Executor ->
+         scope.async {
+            // if compute throws, then it will cause the parent coroutine to be cancelled as well
+            // we don't want that, as want to throw the exception back to the caller.
+            // so we must capture it and throw it manually
+            try {
+               compute(ks)
+            } catch (e: Throwable) {
+               error = e
+               emptyMap()
+            }
+         }.asCompletableFuture()
       }.await()
+      error?.let { throw it }
+      return value
    }
 
    /**

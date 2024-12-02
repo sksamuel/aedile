@@ -8,6 +8,7 @@ import kotlinx.coroutines.future.asCompletableFuture
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executor
 
+@Deprecated("Use extension functions on caffeine instead", ReplaceWith("Caffeine.newBuilder()"))
 class Builder<K, V>(
    private val defaultScope: CoroutineScope,
    private val useCallingContext: Boolean,
