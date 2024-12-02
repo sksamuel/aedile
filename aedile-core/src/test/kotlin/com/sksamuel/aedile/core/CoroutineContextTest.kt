@@ -1,5 +1,6 @@
 package com.sksamuel.aedile.core
 
+import com.github.benmanes.caffeine.cache.Caffeine
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.ThreadContextElement
@@ -10,7 +11,7 @@ class CoroutineContextTest : FunSpec() {
    init {
 
       test("the calling context should be used by default for caches") {
-         val cache = cacheBuilder<String, String?>().build()
+         val cache = Caffeine.newBuilder().asCache<String, String?>()
          withContext(Hello()) {
             cache.get("foo") {
                "threadlocal=" + helloThreadLocal.get()
@@ -23,7 +24,7 @@ class CoroutineContextTest : FunSpec() {
       }
 
       test("the calling context should be used by default for loading caches") {
-         val cache = cacheBuilder<String, String?>().build { "yahoo" }
+         val cache = Caffeine.newBuilder().asLoadingCache<String, String?> { "yahoo" }
          withContext(Hello()) {
             cache.get("foo") {
                "$it=" + helloThreadLocal.get()
