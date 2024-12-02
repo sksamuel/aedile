@@ -13,6 +13,7 @@ import kotlin.time.toJavaDuration
  * Creates a [Builder] which by default uses the coroutine context from the caller for get/getall compute overrides.
  * To delegate to a global dispatcher, set the dispatcher in the configuration.
  */
+@Deprecated("Use Caffeine.newBuilder directly and use extension functions for Kotlin behaviour. Eg, Caffeine.newBuilder().buildAsync<String, String>()")
 fun <K, V> cacheBuilder(configure: Configuration<K, V>.() -> Unit = {}): Builder<K, V> {
 
    val c = Configuration<K, V>()

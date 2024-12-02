@@ -15,7 +15,7 @@ import kotlin.time.toJavaDuration
 /**
  * Creates a [Builder] which by default uses [Dispatchers.IO] to execute computation functions.
  */
-@Deprecated("Prefer cacheBuilder which defaults to using the calling context for compute function excecution. To use the previous behaviour, use cacheBuilder, and set useCallingContext to false. This deprecated builder retains the previous behaviour.")
+@Deprecated("Use extension functions. This deprecated builder retains the previous behaviour.", ReplaceWith("Caffeine.newBuilder()"))
 fun <K, V> caffeineBuilder(configure: Configuration<K, V>.() -> Unit = {}): Builder<K, V> {
 
    val c = Configuration<K, V>()
