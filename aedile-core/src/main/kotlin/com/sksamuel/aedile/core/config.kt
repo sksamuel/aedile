@@ -24,14 +24,29 @@ fun <K, V> Caffeine<K, V>.scheduler(scheduler: Scheduler): Caffeine<K, V> {
 }
 
 /**
- * Specifies a listener that is notified each time an entry is evicted.
- * See full docs at [Caffeine.evictionListener].
+ * Specifies a listener that is notified each time an entry is removed.
+ * See full docs at [Caffeine.removalListener].
  */
 fun <K, V> Caffeine<K, V>.removalListener(
    scope: CoroutineScope,
-   listener: suspend (K?, V?, RemovalCause) -> Unit
+   listener: suspend (K?, V?, RemovalCause) -> Unit,
 ): Caffeine<K, V> {
-   return removalListener<K, V> { key, value, cause ->
+   return removalListener { key, value, cause ->
+      scope.launch {
+         listener.invoke(key, value, cause)
+      }
+   }
+}
+
+/**
+ * Specifies a listener that is notified each time an entry is evicted.
+ * See full docs at [Caffeine.evictionListener].
+ */
+fun <K, V> Caffeine<K, V>.evictionListener(
+   scope: CoroutineScope,
+   listener: suspend (K?, V?, RemovalCause) -> Unit,
+): Caffeine<K, V> {
+   return evictionListener { key, value, cause ->
       scope.launch {
          listener.invoke(key, value, cause)
       }
