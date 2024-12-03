@@ -1,5 +1,13 @@
 # Changelog
 
+
+### 2.0.0
+
+* Deprecated cacheBuilder in favor of extending `Caffeine.newBuilder`. See [README](README.md) for full details.
+  * New extension functions for `Caffeine` builder support more natural coroutine operations.
+* Deprecated `aedile-micrometer` module in favor of Micrometer's native support for Caffeine.
+* Fixed coroutine cancellation propagation #30
+
 ### 1.3.1
 
 * Added `getOrNull` with compute that allows for the compute function to return nulls.
