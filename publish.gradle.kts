@@ -3,10 +3,6 @@ apply(plugin = "java-library")
 apply(plugin = "maven-publish")
 apply(plugin = "signing")
 
-repositories {
-  mavenCentral()
-}
-
 val signingKey: String? by project
 val signingPassword: String? by project
 
@@ -57,7 +53,7 @@ publishing {
       from(components["java"])
       pom {
         name.set("aedile")
-        description.set("Kotlin Cache")
+        description.set("Kotlin Wrapper for Caffeine")
         url.set("http://www.github.com/sksamuel/aedile")
 
         scm {

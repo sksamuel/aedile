@@ -1,36 +1,16 @@
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 
-buildscript {
-   repositories {
-      mavenCentral()
-      maven {
-         url = uri("https://oss.sonatype.org/content/repositories/snapshots/")
-      }
-      maven {
-         url = uri("https://plugins.gradle.org/m2/")
-      }
-   }
-}
-
 plugins {
    signing
    `maven-publish`
-   kotlin("jvm").version("1.9.25")
+   kotlin("jvm")
 }
 
-allprojects {
+subprojects {
    apply(plugin = "org.jetbrains.kotlin.jvm")
 
    group = "com.sksamuel.aedile"
    version = Ci.version
-
-   repositories {
-      mavenLocal()
-      mavenCentral()
-      maven {
-         url = uri("https://oss.sonatype.org/content/repositories/snapshots")
-      }
-   }
 
    dependencies {
       api(rootProject.libs.coroutines.core)
@@ -51,9 +31,12 @@ allprojects {
       toolchain {
          languageVersion.set(JavaLanguageVersion.of(11))
       }
+      withSourcesJar()
    }
 
    tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
       kotlinOptions.jvmTarget = "11"
+      kotlinOptions.apiVersion = "1.9"
+      kotlinOptions.languageVersion = "1.9"
    }
 }
