@@ -93,6 +93,17 @@ class AsCacheTest : FunSpec() {
          cache.getIfPresent("wibble") shouldBe null
       }
 
+      test("should support invalidateAll") {
+         val cache = Caffeine.newBuilder().asCache<String, String>()
+         cache.put("wibble", "wobble")
+         cache.put("bibble", "bobble")
+         cache.getIfPresent("wibble") shouldBe "wobble"
+         cache.getIfPresent("bibble") shouldBe "bobble"
+         cache.invalidateAll()
+         cache.getIfPresent("wibble") shouldBe null
+         cache.getIfPresent("bibble") shouldBe null
+      }
+
       test("should support contains") {
          val cache = Caffeine.newBuilder().asCache<String, String>()
          cache.put("wibble", "wobble")
