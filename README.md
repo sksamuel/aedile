@@ -2,7 +2,7 @@
 
 ![main](https://github.com/sksamuel/aedile/workflows/main/badge.svg)
 [<img src="https://img.shields.io/maven-central/v/com.sksamuel.aedile/aedile-core.svg?label=latest%20release"/>](https://central.sonatype.com/search?q=aedile)
-[<img src="https://img.shields.io/nexus/s/https/s01.oss.sonatype.org/com.sksamuel.aedile/aedile-core.svg?label=latest%20snapshot&style=plastic"/>](https://s01.oss.sonatype.org/content/repositories/snapshots/com/sksamuel/aedile/aedile-core/)
+[<img src="https://img.shields.io/nexus/s/https/s01.oss.sonatype.org/com.sksamuel.aedile/aedile-core.svg?label=latest%20snapshot&style=plastic"/>](https://s01.oss.sonatype.org/content/repositories/snapshots/com/sksamuel/aedile/)
 
 Aedile is a simple Kotlin wrapper for [Caffeine](https://github.com/ben-manes/caffeine) which prefers coroutines rather
 than Java futures.
@@ -16,7 +16,7 @@ See [changelog](changelog.md)
 * **Backed by Caffeine:** This is not a new cache implementation with its own bugs and quirks, but a simple wrapper
   around Caffeine which has been used on the JVM for years.
 * **Kotlin durations:** Specify expiration and refresh times in `kotlin.time.Duration` rather than Java durations.
-* **Kotlin functions:** Whereever a function is required - eg eviction listener - Aedile supports Kotlin functions
+* **Kotlin functions:** Wherever a function is required - eg eviction listener - Aedile supports Kotlin functions
   rather than Java's Function interface.
 
 ## Usage
@@ -27,11 +27,11 @@ Add Aedile to your build:
 implementation 'com.sksamuel.aedile:aedile-core:<version>'
 ```
 
-Next, in your code, create a cache through the cache builder with the `cacheBuilder()` function,
-supplying the key / value types.
+Next, in your code, create a cache configuration using the standard Caffeine builder. Then, instead of using the
+`buildAsync` methods that Caffeine provides, use the `asCache` or `asLoadingCache` methods that Aedile provides.
 
 ```kotlin
-val cache = cacheBuilder<String, String>().build()
+val cache = Caffeine.newBuilder().asCache<String, String>()
 ```
 
 With this cache we can request values if present, or supply a suspendable function to compute them.
@@ -45,31 +45,31 @@ val value2 = cache.get("foo") {
 }
 ```
 
-The build function supports a generic compute function which is used if no specific compute function is provided.
+The `asLoadingCache` method supports a generic compute function which is used if no specific compute function is provided.
 
 ```kotlin
-val cache = cacheBuilder<String, String>().build {
-   delay(1)
+val cache = Caffeine.newBuilder().asLoadingCache<String, String>() {
+   delay(1) // look ma, we support suspendable functions!
    "value"
 }
 
-cache.get("foo") // uses default compute
-cache.get("bar") { "other" } // uses specific compute function
+cache.get("foo") // uses default compute, will return "value"
+cache.get("bar") { "other" } // uses specific compute function to return "other"
 ```
 
 ## Configuration
 
-When creating the cache, Aedile supports most Caffeine configuration options. The exception is `softValues`
-and `weakValues` which are not supported with asynchronous operations. Since Aedile's purpose is to support coroutines,
-these options are ignored.
+When creating the cache, Aedile wraps the standard Caffeine configuration options, adding extension functions to make
+it easier to use Kotlin types - such as `kotlin.time.Duration` rather than Java's `Duration`.
 
-To configure the builder we supply a configuration lambda:
+For example:
 
 ```kotlin
-val cache = cacheBuilder<String, String> {
-   maximumSize = 100
-   initialCapacity = 10
-}.build()
+val cache = Caffeine
+              .newBuilder()
+              .expireAfterWrite(1.hours) // supports kotlin.time.Duration
+              .maximumSize(100) // standard Caffeine option
+              .asCache<String, String>()
 ```
 
 ## Evictions
@@ -77,7 +77,7 @@ val cache = cacheBuilder<String, String> {
 Caffeine provides different approaches to eviction:
 
 * expireAfterAccess(duration): Expire entries after the specified duration has passed since the entry was last accessed
-  by a read or a write. This could be desirable if the cached data is bound to a session and expires due to inactivity.
+  by a read or write. This could be desirable if the cached data is bound to a session and expires due to inactivity.
 
 * expireAfterWrite(duration): Expire entries after the specified duration has passed since the entry was created, or the
   most recent replacement of the value. This could be desirable if cached data grows stale after a certain amount of
@@ -92,38 +92,41 @@ Caffeine provides different approaches to eviction:
 You can specify a suspendable function to listen to evictions:
 
 ```kotlin
-val cache = cacheBuilder<String, String> {
-   evictionListener = { key, value, cause ->
+val cache = Caffeine
+   .newBuilder()
+   .expireAfterWrite(1.hours) // supports kotlin.time.Duration
+   .maximumSize(100) // standard Caffeine option
+   .asCache<String, String>()
+   .evictionListener { key, value, cause ->
       when (cause) {
          RemovalCause.SIZE -> println("Removed due to size constraints")
          else -> delay(100) // suspendable for no real reason, but just to show you can!!
       }
-   }
-}.build()
+   }.asCache<String, String>()
 ```
 
-## Specify Dispatchers
+## Coroutine Context
 
-By default, Aedile will use the dispatcher from the calling function for executing the compute functions. You can specify your own
-dispatcher when configuring the builder.
+Aedile will use the context from the calling function for executing the compute functions. You can
+specify your own context by just switching the context like with any suspendable call.
 
 ```kotlin
-val cacheDispatcher = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
-val cache = cacheBuilder<String, String>() {
-   this.dispatcher = cacheDispatcher
-}.build()
+val cache = Caffeine.newBuilder().asCache<String, String>()
+val value = cache.get("foo") {
+      withContext(Dispatchers.IO) {
+         // blocking database call
+      }
+   }
+}
 ```
-
-You can also specify a custom `CoroutineScope` if required. Note that this scope should not be cancelled or closed while
-the cache is in use.
 
 ## Metrics
 
-Aedile provides [Micrometer](https://micrometer.io) integration which simply delegates to the Caffeine micrometer
-support. To use this, import the `com.sksamuel.aedile:aedile-micrometer` module, and bind to a micrometer registry:
+[Micrometer](https://micrometer.io) provides integration which wraps the Caffeine cache classes.
+To use this, call `.underlying()` to get access to the wrapped Caffeine instance.
+
+For example:
 
 ```kotlin
-CacheMetrics(cache, "my-cache-name").bindTo(registry)
-// or
-LoadingCacheMetrics(cache, "my-cache-name").bindTo(registry)
+CaffeineCacheMetrics(cache.underlying().synchronous(), "my-cache-name", tags).bindTo(registry)
 ```
