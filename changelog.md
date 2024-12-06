@@ -1,14 +1,18 @@
 # Changelog
 
+### 2.0.1 (December 2024)
 
-### 2.0.0
+* 2.0.0 was unable to compile when using an eviction or removal listener. This release fixes that by adding
+  `withEvictionListener` and `withRemovalListener` extension functions to the `Caffeine` builder.
+
+### 2.0.0 (December 2024)
 
 * Deprecated cacheBuilder in favor of extending `Caffeine.newBuilder`. See [README](README.md) for full details.
-  * New extension functions for `Caffeine` builder support more natural coroutine operations.
+   * New extension functions for `Caffeine` builder support more natural coroutine operations.
 * Deprecated `aedile-micrometer` module in favor of Micrometer's native support for Caffeine.
 * Fixed coroutine cancellation propagation #30
 
-### 1.3.1
+### 1.3.1  (June 2023)
 
 * Added `getOrNull` with compute that allows for the compute function to return nulls.
 
