@@ -106,7 +106,7 @@ class LoadingCacheTest : FunSpec() {
          }
       }
 
-      test("getAll should throw if build compute function throws and any key is missing") {
+      test("!getAll should throw if build compute function throws and any key is missing") {
          val cache = cacheBuilder<String, String>().build {
             error("kaput")
          }
