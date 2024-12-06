@@ -45,7 +45,8 @@ val value2 = cache.get("foo") {
 }
 ```
 
-The `asLoadingCache` method supports a generic compute function which is used if no specific compute function is provided.
+The `asLoadingCache` method supports a generic compute function which is used if no specific compute function is
+provided.
 
 ```kotlin
 val cache = Caffeine.newBuilder().asLoadingCache<String, String>() {
@@ -66,10 +67,10 @@ For example:
 
 ```kotlin
 val cache = Caffeine
-              .newBuilder()
-              .expireAfterWrite(1.hours) // supports kotlin.time.Duration
-              .maximumSize(100) // standard Caffeine option
-              .asCache<String, String>()
+   .newBuilder()
+   .expireAfterWrite(1.hours) // supports kotlin.time.Duration
+   .maximumSize(100) // standard Caffeine option
+   .asCache<String, String>()
 ```
 
 ## Evictions
@@ -89,7 +90,7 @@ Caffeine provides different approaches to eviction:
 * invalidate / invalidateAll: Programatically remove entries based on their key(s) or remove all entries. In the case of
   a loading cache, any currently loading values may not be removed.
 
-You can specify a suspendable function to listen to evictions:
+You can specify a suspendable function to listen to evictions using the `withEvictionListener` method.
 
 ```kotlin
 val cache = Caffeine
@@ -97,11 +98,25 @@ val cache = Caffeine
    .expireAfterWrite(1.hours) // supports kotlin.time.Duration
    .maximumSize(100) // standard Caffeine option
    .asCache<String, String>()
-   .evictionListener { key, value, cause ->
+   .withEvictionListener { key, value, cause ->
       when (cause) {
          RemovalCause.SIZE -> println("Removed due to size constraints")
          else -> delay(100) // suspendable for no real reason, but just to show you can!!
       }
+   }.asCache<String, String>()
+```
+
+## Removals
+
+Similar to evictions, you can specify a suspendable function to listen to removals using the `withRemovalListener`
+method.
+
+```kotlin
+val cache = Caffeine
+   .newBuilder()
+   .asCache<String, String>()
+   .withRemovalListener { key, value, cause ->
+      ...
    }.asCache<String, String>()
 ```
 
@@ -113,10 +128,10 @@ specify your own context by just switching the context like with any suspendable
 ```kotlin
 val cache = Caffeine.newBuilder().asCache<String, String>()
 val value = cache.get("foo") {
-      withContext(Dispatchers.IO) {
-         // blocking database call
-      }
+   withContext(Dispatchers.IO) {
+      // blocking database call
    }
+}
 }
 ```
 
