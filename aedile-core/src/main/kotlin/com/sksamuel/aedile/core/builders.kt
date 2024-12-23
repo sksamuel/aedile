@@ -20,7 +20,7 @@ import java.util.concurrent.Executor
  * If the suspendable computation throws or computes a null value then the
  * entry will be automatically removed.
  */
-fun <K, V> Caffeine<Any, Any>.asCache(): Cache<K, V> {
+fun <K : Any?, V : Any?> Caffeine<in K, in V>.asCache(): Cache<K, V> {
    val scope = CoroutineScope(Dispatchers.IO + CoroutineName("Aedile-AsyncLoadingCache-Scope") + SupervisorJob())
    return asCache(scope)
 }
@@ -34,7 +34,7 @@ fun <K, V> Caffeine<Any, Any>.asCache(): Cache<K, V> {
  * If the suspendable computation throws or computes a null value then the
  * entry will be automatically removed.
  */
-fun <K, V> Caffeine<Any, Any>.asCache(scope: CoroutineScope): Cache<K, V> {
+fun <K : Any?, V : Any?> Caffeine<in K, in V>.asCache(scope: CoroutineScope): Cache<K, V> {
    return Cache(scope, true, buildAsync())
 }
 
