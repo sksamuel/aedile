@@ -1,10 +1,12 @@
 package com.sksamuel.aedile.core
 
 import com.github.benmanes.caffeine.cache.Caffeine
+import com.github.benmanes.caffeine.cache.Expiry
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.delay
+import org.checkerframework.checker.index.qual.NonNegative
 
 class AsCacheTest : FunSpec() {
    init {
@@ -109,6 +111,38 @@ class AsCacheTest : FunSpec() {
          cache.put("wibble", "wobble")
          cache.contains("wibble") shouldBe true
          cache.contains("bubble") shouldBe false
+      }
+
+      test("check invariants on expire after") {
+         val loggerExpiry = object : Expiry<Int, String> {
+            override fun expireAfterRead(
+               key: Int?,
+               value: String?,
+               currentTime: Long,
+               currentDuration: @NonNegative Long
+            ): Long {
+               return 0
+            }
+
+            override fun expireAfterCreate(key: Int?, value: String?, currentTime: Long): Long {
+               return 0
+            }
+
+            override fun expireAfterUpdate(
+               key: Int?,
+               value: String?,
+               currentTime: Long,
+               currentDuration: @NonNegative Long
+            ): Long {
+               return 0
+            }
+         }
+
+         Caffeine.newBuilder()
+            .maximumSize(2000)
+            .initialCapacity(500)
+            .expireAfter(loggerExpiry)
+            .asCache<Int, String>()
       }
    }
 }
