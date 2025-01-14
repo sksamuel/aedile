@@ -45,7 +45,7 @@ fun <K : Any?, V : Any?> Caffeine<in K, in V>.asCache(scope: CoroutineScope): Ca
  * If the suspendable computation throws or computes a null value then the
  * entry will be automatically removed.
  */
-fun <K, V> Caffeine<Any, Any>.asLoadingCache(compute: suspend (K) -> V): LoadingCache<K, V> {
+fun <K : Any?, V : Any?> Caffeine<in K, in V>.asLoadingCache(compute: suspend (K) -> V): LoadingCache<K, V> {
    val scope = CoroutineScope(Dispatchers.IO + CoroutineName("Aedile-AsyncLoadingCache-Scope") + SupervisorJob())
    return asLoadingCache(scope, compute)
 }
@@ -59,7 +59,7 @@ fun <K, V> Caffeine<Any, Any>.asLoadingCache(compute: suspend (K) -> V): Loading
  * If the suspendable computation throws or computes a null value then the
  * entry will be automatically removed.
  */
-fun <K, V> Caffeine<Any, Any>.asLoadingCache(
+fun <K : Any?, V : Any?> Caffeine<in K, in V>.asLoadingCache(
    scope: CoroutineScope,
    compute: suspend (K) -> V
 ): LoadingCache<K, V> {
@@ -78,7 +78,7 @@ fun <K, V> Caffeine<Any, Any>.asLoadingCache(
  * The [reloadCompute] function is invoked to refresh an entry if refreshAfterWrite
  * is enabled or refresh is invoked. See full docs [AsyncCacheLoader.asyncReload].
  */
-fun <K, V> Caffeine<Any, Any>.asLoadingCache(
+fun <K : Any?, V : Any?> Caffeine<in K, in V>.asLoadingCache(
    compute: suspend (K) -> V,
    reloadCompute: suspend (K, V) -> V,
 ): LoadingCache<K, V> {
@@ -100,7 +100,7 @@ fun <K, V> Caffeine<Any, Any>.asLoadingCache(
  *
  * The compute functions will execute on the given [scope].
  */
-fun <K, V> Caffeine<Any, Any>.asLoadingCache(
+fun <K : Any?, V : Any?> Caffeine<in K, in V>.asLoadingCache(
    scope: CoroutineScope,
    compute: suspend (K) -> V,
    reloadCompute: suspend (K, V) -> V,
@@ -125,7 +125,7 @@ fun <K, V> Caffeine<Any, Any>.asLoadingCache(
  * If the suspendable computation throws or computes a null value then the
  * entry will be automatically removed.
  */
-fun <K, V> Caffeine<Any, Any>.asBulkLoadingCache(compute: suspend (Set<K>) -> Map<K, V>): LoadingCache<K, V> {
+fun <K : Any?, V : Any?> Caffeine<in K, in V>.asBulkLoadingCache(compute: suspend (Set<K>) -> Map<K, V>): LoadingCache<K, V> {
    val scope = CoroutineScope(Dispatchers.IO + CoroutineName("Aedile-AsyncLoadingCache-Scope") + SupervisorJob())
    return asBulkLoadingCache(scope, compute)
 }
@@ -141,7 +141,7 @@ fun <K, V> Caffeine<Any, Any>.asBulkLoadingCache(compute: suspend (Set<K>) -> Ma
  *
  * The compute function will execute on the given [scope].
  */
-fun <K, V> Caffeine<Any, Any>.asBulkLoadingCache(
+fun <K : Any?, V : Any?> Caffeine<in K, in V>.asBulkLoadingCache(
    scope: CoroutineScope,
    compute: suspend (Set<K>) -> Map<K, V>
 ): LoadingCache<K, V> {
