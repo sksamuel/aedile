@@ -1,5 +1,13 @@
 # Changelog
 
+### 2.0.3 (January 2025)
+
+* Fixes the same covariance issue for `asLoadingCache` and `asBulkLoadingCache`.
+
+### 2.0.2 (December 2024)
+
+* 2.0.0 had an issue with the covariance of the Caffeine builders for `asCache` when using `expireAfter`
+
 ### 2.0.1 (December 2024)
 
 * 2.0.0 was unable to compile when using an eviction or removal listener. This release fixes that by adding
