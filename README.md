@@ -132,7 +132,6 @@ val value = cache.get("foo") {
       // blocking database call
    }
 }
-}
 ```
 
 ## Metrics
