@@ -1,4 +1,6 @@
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 
 plugins {
    signing
@@ -35,8 +37,10 @@ subprojects {
    }
 
    tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-      kotlinOptions.jvmTarget = "11"
-      kotlinOptions.apiVersion = "1.9"
-      kotlinOptions.languageVersion = "1.9"
+      compilerOptions {
+         jvmTarget = JvmTarget.JVM_11
+         apiVersion = KotlinVersion.KOTLIN_1_9
+         languageVersion = KotlinVersion.KOTLIN_1_9
+      }
    }
 }
