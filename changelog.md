@@ -1,5 +1,9 @@
 # Changelog
 
+### 2.1.0 (April 2025)
+
+* Added refresh/refreshAll to LoadingCache
+
 ### 2.0.3 (January 2025)
 
 * Fixes the same covariance issue for `asLoadingCache` and `asBulkLoadingCache`.
