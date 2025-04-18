@@ -175,6 +175,14 @@ class LoadingCache<K, V>(
       cache.synchronous().invalidateAll()
    }
 
+   fun refresh(key: K) {
+      cache.synchronous().refresh(key)
+   }
+
+   fun refreshAll(keys: Collection<K>) {
+      cache.synchronous().refreshAll(keys)
+   }
+
    private suspend fun scope(): CoroutineScope {
       return if (useCallingContext) CoroutineScope(coroutineContext) else defaultScope
    }

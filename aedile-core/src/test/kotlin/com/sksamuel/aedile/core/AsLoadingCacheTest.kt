@@ -319,6 +319,30 @@ class AsLoadingCacheTest : FunSpec() {
          cache.contains("bubble") shouldBe false
       }
 
+      test("support refresh") {
+         var counter = 0
+         val cache = Caffeine.newBuilder().asLoadingCache<String, Int> {
+            counter++
+            counter
+         }
+         cache.get("foo") shouldBe 1
+         cache.refresh("foo")
+         cache.get("foo") shouldBe 2
+      }
+
+      test("support refresh all") {
+         var counter = 0
+         val cache = Caffeine.newBuilder().asLoadingCache<String, Int> {
+            counter++
+            counter
+         }
+         cache.get("foo") shouldBe 1
+         cache.get("bar") shouldBe 2
+         cache.refreshAll(setOf("foo", "bar"))
+         cache.get("foo") shouldBe 3
+         cache.get("bar") shouldBe 4
+      }
+
       test("check invariants on expire after") {
          val loggerExpiry = object : Expiry<Int, String> {
             override fun expireAfterRead(
