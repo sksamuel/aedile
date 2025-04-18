@@ -1,5 +1,9 @@
 # Changelog
 
+### 2.1.1 (April 2025)
+
+* Updated refresh/refreshAll to be suspendable
+
 ### 2.1.0 (April 2025)
 
 * Added refresh/refreshAll to LoadingCache
