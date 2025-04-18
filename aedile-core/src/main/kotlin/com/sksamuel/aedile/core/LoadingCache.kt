@@ -181,8 +181,8 @@ class LoadingCache<K, V>(
     *
     * See full docs at [com.github.benmanes.caffeine.cache.LoadingCache.refresh].
     */
-   suspend fun refresh(key: K) {
-      cache.synchronous().refresh(key).await()
+   suspend fun refresh(key: K): V {
+      return cache.synchronous().refresh(key).await()
    }
 
    /**
@@ -191,8 +191,8 @@ class LoadingCache<K, V>(
     *
     * See full docs at [com.github.benmanes.caffeine.cache.LoadingCache.refreshAll].
     */
-   suspend fun refreshAll(keys: Collection<K>) {
-      cache.synchronous().refreshAll(keys).await()
+   suspend fun refreshAll(keys: Collection<K>): Map<K?, V?> {
+      return cache.synchronous().refreshAll(keys).await()
    }
 
    private suspend fun scope(): CoroutineScope {

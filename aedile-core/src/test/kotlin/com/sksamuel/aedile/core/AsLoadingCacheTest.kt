@@ -328,7 +328,7 @@ class AsLoadingCacheTest : FunSpec() {
             counter
          }
          cache.get("foo") shouldBe 1
-         cache.refresh("foo")
+         cache.refresh("foo") shouldBe 2
          eventually(5.seconds) {
             cache.get("foo") shouldBe 2
          }
@@ -342,7 +342,7 @@ class AsLoadingCacheTest : FunSpec() {
          }
          cache.get("foo") shouldBe 1
          cache.get("bar") shouldBe 2
-         cache.refreshAll(setOf("foo", "bar"))
+         cache.refreshAll(setOf("foo", "bar")) shouldBe mapOf("foo" to 3, "bar" to 4)
          eventually(5.seconds) {
             cache.get("foo") shouldBe 3
             cache.get("bar") shouldBe 4
