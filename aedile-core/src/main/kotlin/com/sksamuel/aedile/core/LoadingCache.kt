@@ -175,10 +175,22 @@ class LoadingCache<K, V>(
       cache.synchronous().invalidateAll()
    }
 
+   /**
+    * Loads a new value for the key, asynchronously. While the new value is loading the
+    * previous value (if any) will continue to be returned by get(key) unless it is evicted.
+    *
+    * See full docs at [com.github.benmanes.caffeine.cache.LoadingCache.refresh].
+    */
    fun refresh(key: K) {
       cache.synchronous().refresh(key)
    }
 
+   /**
+    * Loads a new value for each key, asynchronously. While the new value is loading the
+    * previous value (if any) will continue to be returned by get(key) unless it is evicted.
+    *
+    * See full docs at [com.github.benmanes.caffeine.cache.LoadingCache.refreshAll].
+    */
    fun refreshAll(keys: Collection<K>) {
       cache.synchronous().refreshAll(keys)
    }
