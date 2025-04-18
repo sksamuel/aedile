@@ -1,5 +1,9 @@
 # Changelog
 
+### 2.1.2 (April 2025)
+
+* Added return values for refresh/refreshAll
+
 ### 2.1.1 (April 2025)
 
 * Updated refresh/refreshAll to be suspendable
