@@ -2,6 +2,7 @@ package com.sksamuel.aedile.core
 
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.github.benmanes.caffeine.cache.Expiry
+import io.kotest.assertions.nondeterministic.eventually
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
@@ -13,6 +14,7 @@ import kotlinx.coroutines.yield
 import org.checkerframework.checker.index.qual.NonNegative
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 class AsLoadingCacheTest : FunSpec() {
    init {
@@ -317,6 +319,34 @@ class AsLoadingCacheTest : FunSpec() {
          cache.put("wibble", "wobble")
          cache.contains("wibble") shouldBe true
          cache.contains("bubble") shouldBe false
+      }
+
+      test("support refresh") {
+         var counter = 0
+         val cache = Caffeine.newBuilder().asLoadingCache<String, Int> {
+            counter++
+            counter
+         }
+         cache.get("foo") shouldBe 1
+         cache.refresh("foo")
+         eventually(5.seconds) {
+            cache.get("foo") shouldBe 2
+         }
+      }
+
+      test("support refresh all") {
+         var counter = 0
+         val cache = Caffeine.newBuilder().asLoadingCache<String, Int> {
+            counter++
+            counter
+         }
+         cache.get("foo") shouldBe 1
+         cache.get("bar") shouldBe 2
+         cache.refreshAll(setOf("foo", "bar"))
+         eventually(5.seconds) {
+            cache.get("foo") shouldBe 3
+            cache.get("bar") shouldBe 4
+         }
       }
 
       test("check invariants on expire after") {
