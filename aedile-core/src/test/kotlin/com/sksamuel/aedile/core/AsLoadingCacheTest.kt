@@ -106,8 +106,15 @@ class AsLoadingCacheTest : FunSpec() {
             keys.associateWith { "$it-value" }
          }
          shouldThrow<IllegalStateException> {
-            supervisorScope {
-               cache.get("foo") { error("kapow") }
+            cache.get("foo") { error("kapow") }
+         }
+      }
+
+      test("get should propagate exceptions in the compute function") {
+         val cache = Caffeine.newBuilder().asCache<String, String>()
+         shouldThrow<IllegalStateException> {
+            cache.get("foo") {
+               error("kapow")
             }
          }
       }

@@ -12,8 +12,6 @@ import java.util.concurrent.CompletableFuture
 import kotlin.coroutines.coroutineContext
 
 class LoadingCache<K : Any, V>(
-   private val defaultScope: CoroutineScope,
-   private val useCallingContext: Boolean,
    private val cache: AsyncLoadingCache<K, V>
 ) {
 
@@ -68,7 +66,7 @@ class LoadingCache<K : Any, V>(
     * See full docs at [AsyncCache.getAll].
     */
    suspend fun getAll(keys: Collection<K>, compute: suspend (Set<K>) -> Map<K, V>): Map<K, V> {
-      val scope = scope()
+      val scope = CoroutineScope(coroutineContext)
       return cache.getAll(keys) { k, _ -> scope.async { compute(k.toSet()) }.asCompletableFuture() }.await()
    }
 
@@ -83,10 +81,29 @@ class LoadingCache<K : Any, V>(
     * and enters it into this cache unless null.
     *
     * If the suspendable computation throws, the entry will be automatically removed from this cache.
+    *
+    * See full docs at [AsyncLoadingCache.get].
     */
    suspend fun get(key: K, compute: suspend (K) -> V): V {
-      val scope = scope()
-      return cache.get(key) { k, _ -> scope.async { compute(k) }.asCompletableFuture() }.await()
+
+      val scope = CoroutineScope(coroutineContext)
+      var error: Throwable? = null
+      val value = cache.get(key) { k, _ ->
+         val asCompletableFuture = scope.async {
+            // if compute throws, then it will cause the parent coroutine to be cancelled as well
+            // we don't want that, as want to throw the exception back to the caller.
+            // so we must capture it and throw it manually
+            try {
+               compute(k)
+            } catch (e: Throwable) {
+               error = e
+               null
+            }
+         }.asCompletableFuture()
+         asCompletableFuture.thenApply { it ?: throw error ?: NullPointerException() }
+      }.await()
+      error?.let { throw it }
+      return value
    }
 
    /**
@@ -102,7 +119,7 @@ class LoadingCache<K : Any, V>(
     * @return the present value, the computed value, or throws.
     */
    suspend fun getOrNull(key: K, compute: suspend (K) -> V?): V? {
-      val scope = scope()
+      val scope = CoroutineScope(coroutineContext)
       return cache.get(key) { k, _ -> scope.async { compute(k) }.asCompletableFuture() }.await()
    }
 
@@ -118,10 +135,10 @@ class LoadingCache<K : Any, V>(
     * If the suspendable computation throws, the entry will be automatically removed.
     *
     * @param key the key to associate the computed value with
-    * @param compute the suspendable function that generate the value.
+    * @param compute the suspendable function that generates the value.
     */
    suspend fun put(key: K, compute: suspend () -> V) {
-      val scope = scope()
+      val scope = CoroutineScope(coroutineContext)
       cache.put(key, scope.async { compute() }.asCompletableFuture())
    }
 
@@ -193,9 +210,5 @@ class LoadingCache<K : Any, V>(
     */
    suspend fun refreshAll(keys: Collection<K>): Map<K, V> {
       return cache.synchronous().refreshAll(keys).await()
-   }
-
-   private suspend fun scope(): CoroutineScope {
-      return if (useCallingContext) CoroutineScope(coroutineContext) else defaultScope
    }
 }
