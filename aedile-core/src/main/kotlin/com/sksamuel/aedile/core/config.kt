@@ -17,7 +17,7 @@ import kotlin.time.toJavaDuration
  *
  * See full docs at [Caffeine.scheduler].
  */
-fun <K, V> Caffeine<K, V>.scheduler(scheduler: Scheduler): Caffeine<K, V> {
+fun <K : Any, V : Any> Caffeine<K, V>.scheduler(scheduler: Scheduler): Caffeine<K, V> {
    return scheduler { _, command, delay, unit ->
       scheduler.schedule(
          { command.run() },
@@ -32,7 +32,7 @@ fun <K, V> Caffeine<K, V>.scheduler(scheduler: Scheduler): Caffeine<K, V> {
  *
  * See full docs at [Caffeine.removalListener].
  */
-fun <K, V> Caffeine<K, V>.withRemovalListener(
+fun <K : Any, V : Any> Caffeine<K, V>.withRemovalListener(
    listener: suspend (K?, V?, RemovalCause) -> Unit,
 ): Caffeine<K, V> {
    val scope = createScope("Aedile-RemovalListener-Scope")
@@ -43,7 +43,7 @@ fun <K, V> Caffeine<K, V>.withRemovalListener(
  * Specifies a listener that is notified each time an entry is removed.
  * See full docs at [Caffeine.removalListener].
  */
-fun <K, V> Caffeine<K, V>.withRemovalListener(
+fun <K : Any, V : Any> Caffeine<K, V>.withRemovalListener(
    scope: CoroutineScope,
    listener: suspend (K?, V?, RemovalCause) -> Unit,
 ): Caffeine<K, V> {
@@ -60,7 +60,7 @@ fun <K, V> Caffeine<K, V>.withRemovalListener(
  *
  * See full docs at [Caffeine.evictionListener].
  */
-fun <K, V> Caffeine<K, V>.withEvictionListener(
+fun <K : Any, V : Any> Caffeine<K, V>.withEvictionListener(
    listener: suspend (K?, V?, RemovalCause) -> Unit,
 ): Caffeine<K, V> {
    val scope = createScope("Aedile-EvictionListener-Scope")
@@ -72,7 +72,7 @@ fun <K, V> Caffeine<K, V>.withEvictionListener(
  *
  * See full docs at [Caffeine.evictionListener].
  */
-fun <K, V> Caffeine<K, V>.withEvictionListener(
+fun <K : Any, V : Any> Caffeine<K, V>.withEvictionListener(
    scope: CoroutineScope,
    listener: suspend (K?, V?, RemovalCause) -> Unit,
 ): Caffeine<K, V> {
@@ -86,21 +86,21 @@ fun <K, V> Caffeine<K, V>.withEvictionListener(
 /**
  * See full docs at [Caffeine.refreshAfterWrite].
  */
-fun <K, V> Caffeine<K, V>.refreshAfterWrite(duration: Duration): Caffeine<K, V> {
+fun <K : Any, V : Any> Caffeine<K, V>.refreshAfterWrite(duration: Duration): Caffeine<K, V> {
    return this.refreshAfterWrite(duration.toJavaDuration())
 }
 
 /**
  * See full docs at [Caffeine.expireAfterAccess].
  */
-fun <K, V> Caffeine<K, V>.expireAfterAccess(duration: Duration): Caffeine<K, V> {
+fun <K : Any, V : Any> Caffeine<K, V>.expireAfterAccess(duration: Duration): Caffeine<K, V> {
    return this.expireAfterAccess(duration.toJavaDuration())
 }
 
 /**
  * See full docs at [Caffeine.expireAfterWrite].
  */
-fun <K, V> Caffeine<K, V>.expireAfterWrite(duration: Duration): Caffeine<K, V> {
+fun <K : Any, V : Any> Caffeine<K, V>.expireAfterWrite(duration: Duration): Caffeine<K, V> {
    return this.expireAfterWrite(duration.toJavaDuration())
 }
 

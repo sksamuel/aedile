@@ -2,10 +2,13 @@ package com.sksamuel.aedile.core
 
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.github.benmanes.caffeine.cache.Expiry
+import io.kotest.assertions.nondeterministic.eventually
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 class AsCacheTest : FunSpec() {
    init {
@@ -137,6 +140,53 @@ class AsCacheTest : FunSpec() {
             .initialCapacity(500)
             .expireAfter(loggerExpiry)
             .asCache<Int, String>()
+      }
+
+      test("expireAfterAccess") {
+         val cache = Caffeine.newBuilder()
+            .expireAfterAccess(500.milliseconds)
+            .asCache<String, String>()
+         cache.get("foo") { "bar" } shouldBe "bar"
+         cache.getIfPresent("foo") shouldBe "bar"
+         cache.contains("foo") shouldBe true
+         delay(2.seconds)
+         cache.contains("foo") shouldBe false
+      }
+
+      test("expireAfterWrite") {
+         val cache = Caffeine.newBuilder()
+            .expireAfterWrite(500.milliseconds)
+            .asCache<String, String>()
+         cache.get("foo") { "bar" } shouldBe "bar"
+         cache.contains("foo") shouldBe true
+         eventually(5.seconds) {
+            cache.contains("foo") shouldBe false
+         }
+      }
+
+      test("Cache should support getOrNull") {
+         val cache = Caffeine.newBuilder().asCache<String, String>()
+         cache.put("foo", "bar")
+         cache.getOrNull("foo") shouldBe "bar"
+         cache.getOrNull("baqwewqewqz") shouldBe null
+      }
+
+      test("getOrNull with compute") {
+         val cache = Caffeine.newBuilder().asCache<String, String>()
+         cache.getOrNull("foo") { "bar" } shouldBe "bar"
+         cache.getOrNull("foo") { "bar2" } shouldBe "bar" // already cached so compute ignored
+      }
+
+      test("getOrNull with compute that returns null should return null") {
+         val cache = Caffeine.newBuilder().asCache<String, String>()
+         cache.getOrNull("foo") { null } shouldBe null
+      }
+
+      test("getOrNull with compute that throws should return previous value") {
+         val cache = Caffeine.newBuilder().asCache<String, String>()
+         cache.getOrNull("foo") { "bar" } shouldBe "bar"
+         cache.getOrNull("foo") { error("kapow") }
+         cache.getOrNull("foo") shouldBe "bar"
       }
    }
 }

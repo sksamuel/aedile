@@ -11,7 +11,7 @@ import kotlinx.coroutines.future.await
 import java.util.concurrent.CompletableFuture
 import kotlin.coroutines.coroutineContext
 
-class LoadingCache<K, V>(
+class LoadingCache<K : Any, V>(
    private val defaultScope: CoroutineScope,
    private val useCallingContext: Boolean,
    private val cache: AsyncLoadingCache<K, V>
@@ -73,9 +73,9 @@ class LoadingCache<K, V>(
    }
 
    /**
-    * Returns the value associated with key in this cache, obtaining that value from the
+    * Returns the value associated with a key in this cache, getting that value from the
     * [compute] function if necessary. This method provides a simple substitute for the conventional
-    * "if cached, return; otherwise create, cache and return" pattern.
+    * "if cached, return; otherwise create, cache, and return" pattern.
     *
     * The instance returned from the compute function will be stored directly into the cache.
     *
@@ -90,7 +90,7 @@ class LoadingCache<K, V>(
    }
 
    /**
-    * Returns the value associated with key in this cache, obtaining that value from the
+    * Returns the value associated with a key in this cache, getting that value from the
     * [compute] function if necessary. This function will suspend while the compute method
     * is executed. If the suspendable computation throws, the exception will be propagated to the caller.
     *
@@ -160,7 +160,7 @@ class LoadingCache<K, V>(
    /**
     * Discards the given key in the cache.
     * Will block until completed.
-    * Behavior of the entry if currently being loaded is undefined.
+    * The behavior of the entry if currently being loaded is undefined.
     */
    fun invalidate(key: K) {
       cache.synchronous().invalidate(key)
@@ -169,14 +169,14 @@ class LoadingCache<K, V>(
    /**
     * Discards all entries in the cache.
     * Will block until completed.
-    * Behavior of entries currently being loaded is undefined.
+    * The behavior of entries currently being loaded is undefined.
     */
    fun invalidateAll() {
       cache.synchronous().invalidateAll()
    }
 
    /**
-    * Loads a new value for the key, asynchronously. While the new value is loading the
+    * Loads a new value for the key, asynchronously. While the new value is loading, the
     * previous value (if any) will continue to be returned by get(key) unless it is evicted.
     *
     * See full docs at [com.github.benmanes.caffeine.cache.LoadingCache.refresh].
@@ -186,12 +186,12 @@ class LoadingCache<K, V>(
    }
 
    /**
-    * Loads a new value for each key, asynchronously. While the new value is loading the
+    * Loads a new value for each key, asynchronously. While the new value is loading, the
     * previous value (if any) will continue to be returned by get(key) unless it is evicted.
     *
     * See full docs at [com.github.benmanes.caffeine.cache.LoadingCache.refreshAll].
     */
-   suspend fun refreshAll(keys: Collection<K>): Map<K?, V?> {
+   suspend fun refreshAll(keys: Collection<K>): Map<K, V> {
       return cache.synchronous().refreshAll(keys).await()
    }
 

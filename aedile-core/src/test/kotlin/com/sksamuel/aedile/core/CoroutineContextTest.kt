@@ -11,7 +11,7 @@ class CoroutineContextTest : FunSpec() {
    init {
 
       test("the calling context should be used by default for caches") {
-         val cache = Caffeine.newBuilder().asCache<String, String?>()
+         val cache = Caffeine.newBuilder().asCache<String, String>()
          withContext(Hello()) {
             cache.get("foo") {
                "threadlocal=" + helloThreadLocal.get()
@@ -24,7 +24,7 @@ class CoroutineContextTest : FunSpec() {
       }
 
       test("the calling context should be used by default for loading caches") {
-         val cache = Caffeine.newBuilder().asLoadingCache<String, String?> { "yahoo" }
+         val cache = Caffeine.newBuilder().asLoadingCache<String, String> { "yahoo" }
          withContext(Hello()) {
             cache.get("foo") {
                "$it=" + helloThreadLocal.get()
@@ -33,31 +33,6 @@ class CoroutineContextTest : FunSpec() {
             cache.getAll(setOf("foo")) {
                it.associateWith { "$it=" + helloThreadLocal.get() }
             } shouldBe mapOf("foo" to "foo=hello")
-         }
-      }
-
-      test("the default scope should be used when delegating to the default builder") {
-         val cache = cacheBuilder<String, String?>().build {
-            "$it=" + helloThreadLocal.get()
-         }
-         withContext(Hello()) {
-            cache.get("foo") {
-               "$it=" + helloThreadLocal.get()
-            } shouldBe "foo=hello"
-            cache.get("bar") shouldBe "bar=null"
-         }
-      }
-
-      test("the calling context should not be used when useCallingContext is false") {
-
-         val cache = cacheBuilder<String, String?> {
-            useCallingContext = false
-         }.build()
-
-         withContext(Hello()) {
-            cache.get("foo") {
-               "threadlocal=" + helloThreadLocal.get()
-            } shouldBe "threadlocal=null"
          }
       }
    }
