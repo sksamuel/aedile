@@ -3,9 +3,6 @@ pluginManagement {
       gradlePluginPortal()
       mavenCentral()
    }
-   plugins {
-      kotlin("jvm").version("1.9.25")
-   }
 }
 
 rootProject.name = "aedile"
@@ -35,23 +32,6 @@ dependencyResolutionManagement {
 
          library("caffeine", "com.github.ben-manes.caffeine:caffeine:3.1.8")
          library("micrometer-core", "io.micrometer:micrometer-core:1.13.2")
-
-         val kotest = "5.9.1"
-         library("kotest-datatest", "io.kotest:kotest-framework-datatest:$kotest")
-         library("kotest-junit5", "io.kotest:kotest-runner-junit5:$kotest")
-         library("kotest-core", "io.kotest:kotest-assertions-core:$kotest")
-         library("kotest-json", "io.kotest:kotest-assertions-json:$kotest")
-         library("kotest-property", "io.kotest:kotest-property:$kotest")
-
-         bundle(
-            "testing", listOf(
-               "kotest-datatest",
-               "kotest-junit5",
-               "kotest-core",
-               "kotest-json",
-               "kotest-property",
-            )
-         )
       }
    }
 }
