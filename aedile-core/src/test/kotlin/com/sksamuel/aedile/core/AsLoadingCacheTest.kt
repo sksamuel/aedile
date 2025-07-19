@@ -11,7 +11,6 @@ import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.yield
-import org.checkerframework.checker.index.qual.NonNegative
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
@@ -352,23 +351,23 @@ class AsLoadingCacheTest : FunSpec() {
       test("check invariants on expire after") {
          val loggerExpiry = object : Expiry<Int, String> {
             override fun expireAfterRead(
-               key: Int?,
-               value: String?,
+               key: Int,
+               value: String,
                currentTime: Long,
-               currentDuration: @NonNegative Long
+               currentDuration: Long
             ): Long {
                return 0
             }
 
-            override fun expireAfterCreate(key: Int?, value: String?, currentTime: Long): Long {
+            override fun expireAfterCreate(key: Int, value: String, currentTime: Long): Long {
                return 0
             }
 
             override fun expireAfterUpdate(
-               key: Int?,
-               value: String?,
+               key: Int,
+               value: String,
                currentTime: Long,
-               currentDuration: @NonNegative Long
+               currentDuration: Long
             ): Long {
                return 0
             }

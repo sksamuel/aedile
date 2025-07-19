@@ -2,7 +2,7 @@
 
 ![main](https://github.com/sksamuel/aedile/workflows/main/badge.svg)
 [<img src="https://img.shields.io/maven-central/v/com.sksamuel.aedile/aedile-core.svg?label=latest%20release"/>](https://central.sonatype.com/search?q=aedile)
-[<img src="https://img.shields.io/nexus/s/https/s01.oss.sonatype.org/com.sksamuel.aedile/aedile-core.svg?label=latest%20snapshot&style=plastic"/>](https://s01.oss.sonatype.org/content/repositories/snapshots/com/sksamuel/aedile/)
+[<img src="https://img.shields.io/maven-metadata/v?metadataUrl=https%3A%2F%2Fcentral.sonatype.com%2Frepository%2Fmaven-snapshots%2Fcom%2Fsksamuel%2Faedile%2Faedile-core%2Fmaven-metadata.xml&strategy=highestVersion&label=maven-snapshot">](https://central.sonatype.com/repository/maven-snapshots/com/sksamuel/aedile/aedile-core/maven-metadata.xml)
 
 Aedile is a simple Kotlin wrapper for [Caffeine](https://github.com/ben-manes/caffeine) which prefers coroutines rather
 than Java futures.
