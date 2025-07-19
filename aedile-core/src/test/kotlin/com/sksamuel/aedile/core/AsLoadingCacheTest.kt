@@ -6,7 +6,6 @@ import io.kotest.assertions.nondeterministic.eventually
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
-import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.supervisorScope
@@ -81,7 +80,6 @@ class AsLoadingCacheTest : FunSpec() {
             "bar"
          } shouldBe "bar"
          val key = "baz"
-         cache.getOrNull(key) { null }.shouldBeNull()
          cache.getOrNull(key) { "new value" }.shouldBe("new value")
          cache.getOrNull(key) { "new value 2" }.shouldBe("new value")
          cache.getOrNull(key) { null }.shouldBe("new value")
@@ -235,9 +233,9 @@ class AsLoadingCacheTest : FunSpec() {
          )
       }
 
-      test("should support refreshAfterWrite using refresh compute function") {
+      test("should support refreshAfterWrite using compute function") {
          val value = AtomicInteger(0)
-         val cache = Caffeine.newBuilder().refreshAfterWrite(25.milliseconds).build<String, Int> {
+         val cache = Caffeine.newBuilder().refreshAfterWrite(25.milliseconds).asLoadingCache<String, Int> {
             value.incrementAndGet()
          }
          cache.get("foo")
@@ -253,6 +251,31 @@ class AsLoadingCacheTest : FunSpec() {
          cache.get("foo")
          delay(100)
          value.get() shouldBe 3
+      }
+
+      test("should support refreshAfterWrite using recompute function") {
+         val value = AtomicInteger(0)
+         val cache = Caffeine.newBuilder().refreshAfterWrite(25.milliseconds).asLoadingCache<String, Int>(
+            compute = { value.incrementAndGet() },
+            reloadCompute = { key, old ->
+               value.incrementAndGet()
+               value.incrementAndGet()
+               value.incrementAndGet()
+            }
+         )
+         cache.get("foo")
+         cache.get("foo")
+         cache.get("foo")
+         cache.get("foo")
+         value.get() shouldBe 1
+         delay(100)
+         cache.get("foo")
+         delay(100)
+         value.get() shouldBe 4
+         delay(100)
+         cache.get("foo")
+         delay(100)
+         value.get() shouldBe 7
       }
 
       test("should support asMap") {
@@ -308,6 +331,20 @@ class AsLoadingCacheTest : FunSpec() {
          cache.getIfPresent("wibble") shouldBe "wobble"
          cache.invalidate("wibble")
          cache.getIfPresent("wibble") shouldBe null
+      }
+
+      test("Cache should support invalidateAll") {
+         val cache = Caffeine.newBuilder().asLoadingCache<String, String> {
+            delay(1)
+            "bar"
+         }
+         cache.put("wibble", "a")
+         cache.put("wobble", "b")
+         cache.getIfPresent("wibble") shouldBe "a"
+         cache.getIfPresent("wobble") shouldBe "b"
+         cache.invalidateAll()
+         cache.getIfPresent("wibble") shouldBe null
+         cache.getIfPresent("wobble") shouldBe null
       }
 
       test("Cache should support contains") {

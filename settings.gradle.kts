@@ -9,7 +9,6 @@ rootProject.name = "aedile"
 
 include(
    "aedile-core",
-   "aedile-micrometer",
 )
 
 enableFeaturePreview("STABLE_CONFIGURATION_CACHE")
@@ -29,7 +28,6 @@ dependencyResolutionManagement {
          library("coroutines-jdk8", "org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:$coroutines")
 
          library("caffeine", "com.github.ben-manes.caffeine:caffeine:3.2.2")
-         library("micrometer-core", "io.micrometer:micrometer-core:1.14.0")
       }
    }
 }
