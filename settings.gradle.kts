@@ -30,7 +30,7 @@ dependencyResolutionManagement {
          library("coroutines-core", "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutines")
          library("coroutines-jdk8", "org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:$coroutines")
 
-         library("caffeine", "com.github.ben-manes.caffeine:caffeine:3.1.8")
+         library("caffeine", "com.github.ben-manes.caffeine:caffeine:3.2.2")
          library("micrometer-core", "io.micrometer:micrometer-core:1.13.2")
       }
    }
