@@ -133,14 +133,3 @@ val value = cache.get("foo") {
    }
 }
 ```
-
-## Metrics
-
-[Micrometer](https://micrometer.io) provides integration which wraps the Caffeine cache classes.
-To use this, call `.underlying()` to get access to the wrapped Caffeine instance.
-
-For example:
-
-```kotlin
-CaffeineCacheMetrics(cache.underlying().synchronous(), "my-cache-name", tags).bindTo(registry)
-```
