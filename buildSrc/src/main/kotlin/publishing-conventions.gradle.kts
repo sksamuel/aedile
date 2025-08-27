@@ -11,12 +11,12 @@ mavenPublishing {
    pom {
       name.set("aedile")
       description.set("Kotlin Wrapper for Caffeine")
-      url.set("http://www.github.com/sksamuel/aedile")
+      url.set("https://www.github.com/sksamuel/aedile")
 
       scm {
-         connection.set("scm:git:http://www.github.com/sksamuel/aedile/")
-         developerConnection.set("scm:git:http://github.com/sksamuel/")
-         url.set("http://www.github.com/sksamuel/aedile/")
+         connection.set("scm:git:https://www.github.com/sksamuel/aedile/")
+         developerConnection.set("scm:git:https://github.com/sksamuel/")
+         url.set("https://www.github.com/sksamuel/aedile/")
       }
 
       licenses {
