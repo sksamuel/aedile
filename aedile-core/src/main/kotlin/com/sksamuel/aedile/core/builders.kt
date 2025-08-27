@@ -29,7 +29,7 @@ fun <K : Any, V : Any> Caffeine<in K, in V>.asCache(): Cache<K, V> = Cache(build
  * If the suspendable computation throws or computes a null value, then the
  * entry will be automatically removed.
  */
-fun <K : Any, V : Any> Caffeine<in K, in V>.asLoadingCache(compute: suspend (K) -> V): LoadingCache<K, V> {
+fun <K : Any, V> Caffeine<in K, in V & Any>.asLoadingCache(compute: suspend (K) -> V): LoadingCache<K, V> {
    val scope = CoroutineScope(Dispatchers.IO + CoroutineName("Aedile-AsyncLoadingCache-Scope") + SupervisorJob())
    return asLoadingCache(scope, compute)
 }
@@ -43,7 +43,7 @@ fun <K : Any, V : Any> Caffeine<in K, in V>.asLoadingCache(compute: suspend (K) 
  * If the suspendable computation throws or computes a null value, then the
  * entry will be automatically removed.
  */
-fun <K : Any, V : Any> Caffeine<in K, in V>.asLoadingCache(
+fun <K : Any, V> Caffeine<in K, in V & Any>.asLoadingCache(
    scope: CoroutineScope,
    compute: suspend (K) -> V
 ): LoadingCache<K, V> {
@@ -84,18 +84,18 @@ fun <K : Any, V : Any> Caffeine<in K, in V>.asLoadingCache(
  *
  * The given compute functions will execute on the given [scope].
  */
-fun <K : Any, V : Any> Caffeine<in K, in V>.asLoadingCache(
+fun <K : Any, V> Caffeine<in K, in V & Any>.asLoadingCache(
    scope: CoroutineScope,
    compute: suspend (K) -> V,
-   reloadCompute: suspend (K, V) -> V,
+   reloadCompute: suspend (K, V & Any) -> V,
 ): LoadingCache<K, V> {
    return LoadingCache(buildAsync(object : AsyncCacheLoader<K, V> {
       override fun asyncLoad(key: K, executor: Executor): CompletableFuture<out V> {
          return scope.async { compute(key) }.asCompletableFuture()
       }
 
-      override fun asyncReload(key: K, oldValue: V, executor: Executor): CompletableFuture<out V> {
-         return scope.async { reloadCompute(key, oldValue) }.asCompletableFuture()
+      override fun asyncReload(key: K, oldValue: V /* & Any */, executor: Executor): CompletableFuture<out V> {
+         return scope.async { reloadCompute(key, oldValue!!) }.asCompletableFuture()
       }
    }))
 }
@@ -109,7 +109,7 @@ fun <K : Any, V : Any> Caffeine<in K, in V>.asLoadingCache(
  * If the suspendable computation throws or computes a null value, then the
  * entry will be automatically removed.
  */
-fun <K : Any, V : Any> Caffeine<in K, in V>.asBulkLoadingCache(compute: suspend (Set<K>) -> Map<K, V>): LoadingCache<K, V> {
+fun <K : Any, V: Any> Caffeine<in K, in V>.asBulkLoadingCache(compute: suspend (Set<K>) -> Map<K, V>): LoadingCache<K, V?> {
    val scope = CoroutineScope(Dispatchers.IO + CoroutineName("Aedile-AsyncLoadingCache-Scope") + SupervisorJob())
    return asBulkLoadingCache(scope, compute)
 }
@@ -125,10 +125,10 @@ fun <K : Any, V : Any> Caffeine<in K, in V>.asBulkLoadingCache(compute: suspend 
  *
  * The compute function will execute on the given [scope].
  */
-fun <K : Any, V : Any> Caffeine<in K, in V>.asBulkLoadingCache(
+fun <K : Any, V: Any> Caffeine<in K, in V>.asBulkLoadingCache(
    scope: CoroutineScope,
    compute: suspend (Set<K>) -> Map<K, V>
-): LoadingCache<K, V> {
+): LoadingCache<K, V?> {
    return LoadingCache(buildAsync(AsyncCacheLoader.bulk { keys, _ ->
       scope.async { compute(keys) }.asCompletableFuture()
    }))
