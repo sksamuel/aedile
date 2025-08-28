@@ -25,13 +25,22 @@ class AsLoadingCacheTest : FunSpec() {
          cache.get("else") shouldBe "bar"
       }
 
+      test("should support loading function returning null") {
+         val cache = Caffeine.newBuilder().asLoadingCache<String, String?> {
+            it.takeIf { "o" !in it }
+         }
+         cache.get("woz") shouldBe null
+         cache.get("waz") shouldBe "waz"
+      }
+
       test("should support suspendable bulk loading function") {
-         val cache = Caffeine.newBuilder().asBulkLoadingCache {
+         val cache = Caffeine.newBuilder().asBulkLoadingCache<String, String> {
             delay(1)
             mapOf("tweedle" to "dee", "twuddle" to "dum")
          }
          cache.get("tweedle") shouldBe "dee"
          cache.get("twuddle") shouldBe "dum"
+         cache.get("twoddle") shouldBe null
       }
 
       test("LoadingCache should support simple puts") {

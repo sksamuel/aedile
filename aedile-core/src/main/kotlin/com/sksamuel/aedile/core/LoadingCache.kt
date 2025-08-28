@@ -49,8 +49,9 @@ class LoadingCache<K : Any, V>(
     *
     * See full docs at [AsyncLoadingCache.getAll].
     */
-   suspend fun getAll(keys: Collection<K>): Map<K, V> {
-      return cache.getAll(keys).await()
+   suspend fun getAll(keys: Collection<K>): Map<K, V & Any> {
+      @Suppress("UNCHECKED_CAST") // getAll returns CompletableFuture<Map<K, @NonNull V>>
+      return cache.getAll(keys).await() as Map<K, V & Any>
    }
 
    /**
@@ -65,9 +66,10 @@ class LoadingCache<K : Any, V>(
     *
     * See full docs at [AsyncCache.getAll].
     */
-   suspend fun getAll(keys: Collection<K>, compute: suspend (Set<K>) -> Map<K, V>): Map<K, V> {
+   suspend fun getAll(keys: Collection<K>, compute: suspend (Set<K>) -> Map<K, V & Any>): Map<K, V & Any> {
       val scope = CoroutineScope(coroutineContext)
-      return cache.getAll(keys) { k, _ -> scope.async { compute(k.toSet()) }.asCompletableFuture() }.await()
+      @Suppress("UNCHECKED_CAST") // getAll returns CompletableFuture<Map<K, @NonNull V>>
+      return cache.getAll(keys) { k, _ -> scope.async { compute(k.toSet()) }.asCompletableFuture() }.await() as Map<K, V & Any>
    }
 
    /**
