@@ -1,5 +1,9 @@
 # Changelog
 
+### 3.0.1 (August 2025)
+
+* fix loading cache nullability by @tKe in #50
+
 ### 2.1.2 (April 2025)
 
 * Added return values for refresh/refreshAll
