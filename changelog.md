@@ -1,5 +1,9 @@
 # Changelog
 
+### 3.0.2 (December 2025)
+
+* Updated to Caffeine 3.2.3
+
 ### 3.0.1 (August 2025)
 
 * fix loading cache nullability by @tKe in #50
