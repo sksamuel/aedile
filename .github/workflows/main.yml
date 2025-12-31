@@ -19,11 +19,8 @@ jobs:
           distribution: 'adopt'
           java-version: '11'
 
-      - name: run tests
-        run: ./gradlew test
-
-      - name: deploy to sonatype snapshots
-        run: ./gradlew publishToMavenCentral
+      - name: run tests and publish snapshots
+        run: ./gradlew test publishToMavenCentral
 
       - name: bundle the build report
         if: failure()
