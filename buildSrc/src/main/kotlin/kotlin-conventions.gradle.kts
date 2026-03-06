@@ -26,11 +26,12 @@ kotlin {
 
 dependencies {
    testImplementation("org.jetbrains.kotlin:kotlin-stdlib:2.1.21")
-   testImplementation("io.kotest:kotest-runner-junit5:5.9.1")
-   testImplementation("io.kotest:kotest-assertions-core:5.9.1")
-   testImplementation("io.kotest:kotest-assertions-json:5.9.1")
-   testImplementation("io.kotest:kotest-framework-datatest:5.9.1")
-   testImplementation("io.kotest:kotest-property:5.9.1")
+
+   val kotest = "6.1.4"
+   testImplementation("io.kotest:kotest-runner-junit5:$kotest")
+   testImplementation("io.kotest:kotest-assertions-core:$kotest")
+   testImplementation("io.kotest:kotest-assertions-json:$kotest")
+   testImplementation("io.kotest:kotest-property:$kotest")
 }
 
 tasks.named<Test>("test") {
