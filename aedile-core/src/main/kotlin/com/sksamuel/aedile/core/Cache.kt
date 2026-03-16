@@ -4,11 +4,12 @@ import com.github.benmanes.caffeine.cache.AsyncCache
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.future.asCompletableFuture
 import kotlinx.coroutines.future.asDeferred
 import kotlinx.coroutines.future.await
+import kotlinx.coroutines.future.future
 import java.util.concurrent.CompletableFuture
-import java.util.concurrent.Executor
 import kotlin.coroutines.coroutineContext
 
 class Cache<K : Any, V : Any>(
@@ -52,25 +53,8 @@ class Cache<K : Any, V : Any>(
     * @return the present value, the computed value, or throws.
     *
     */
-   suspend fun get(key: K, compute: suspend (K) -> V): V {
-      val scope = CoroutineScope(coroutineContext)
-      var error: Throwable? = null
-      val value = cache.get(key) { k, _ ->
-         val asCompletableFuture = scope.async {
-            // if compute throws, then it will cause the parent coroutine to be cancelled as well
-            // we don't want that, as want to throw the exception back to the caller.
-            // so we must capture it and throw it manually
-            try {
-               compute(k)
-            } catch (e: Throwable) {
-               error = e
-               null
-            }
-         }.asCompletableFuture()
-         asCompletableFuture.thenApply { it ?: throw error ?: NullPointerException() }
-      }.await()
-      error?.let { throw it }
-      return value
+   suspend fun get(key: K, compute: suspend (K) -> V): V = coroutineScope {
+      cache.get(key) { k, _ -> future { compute(k) } }.await()
    }
 
    /**
@@ -140,24 +124,8 @@ class Cache<K : Any, V : Any>(
       return cache.asMap().mapValues { it.value.asDeferred() }
    }
 
-   suspend fun getAll(keys: Collection<K>, compute: suspend (Collection<K>) -> Map<K, V>): Map<K, V> {
-      val scope = CoroutineScope(coroutineContext)
-      var error: Throwable? = null
-      val value = cache.getAll(keys) { ks: Set<K>, _: Executor ->
-         scope.async {
-            // if compute throws, then it will cause the parent coroutine to be cancelled as well
-            // we don't want that, as want to throw the exception back to the caller.
-            // so we must capture it and throw it manually
-            try {
-               compute(ks)
-            } catch (e: Throwable) {
-               error = e
-               emptyMap()
-            }
-         }.asCompletableFuture()
-      }.await()
-      error?.let { throw it }
-      return value
+   suspend fun getAll(keys: Collection<K>, compute: suspend (Collection<K>) -> Map<K, V>): Map<K, V> = coroutineScope {
+      cache.getAll(keys) { ks, _ -> future { compute(ks) } }.await()
    }
 
    /**
