@@ -6,6 +6,7 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 plugins {
    `java-library`
    kotlin("jvm")
+   id("io.kotest")
 }
 
 java {
@@ -17,17 +18,30 @@ java {
 }
 
 kotlin {
+   jvmToolchain(11)
    compilerOptions {
       jvmTarget.set(JvmTarget.JVM_11)
-      apiVersion.set(KotlinVersion.KOTLIN_1_9)
-      languageVersion.set(KotlinVersion.KOTLIN_1_9)
+      apiVersion.set(KotlinVersion.KOTLIN_2_2)
+      languageVersion.set(KotlinVersion.KOTLIN_2_2)
    }
 }
 
-dependencies {
-   testImplementation("org.jetbrains.kotlin:kotlin-stdlib:2.1.21")
+tasks.compileJava {
+   options.release = 8
+}
 
-   val kotest = "6.1.4"
+tasks.compileTestJava {
+   options.release = 11
+}
+
+tasks.compileTestKotlin {
+   compilerOptions.jvmTarget = JvmTarget.JVM_11
+}
+
+dependencies {
+   testImplementation(kotlin("stdlib"))
+
+   val kotest = "6.1.7"
    testImplementation("io.kotest:kotest-runner-junit5:$kotest")
    testImplementation("io.kotest:kotest-assertions-core:$kotest")
    testImplementation("io.kotest:kotest-assertions-json:$kotest")
