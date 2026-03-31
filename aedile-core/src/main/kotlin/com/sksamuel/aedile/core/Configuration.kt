@@ -9,7 +9,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlin.time.Duration
 
-data class Configuration<K, V>(
+data class Configuration<K : Any, V : Any>(
 
    /**
     * Sets the [CoroutineDispatcher] that is used when executing default build functions.
@@ -81,13 +81,13 @@ data class Configuration<K, V>(
    var ticker: (() -> Long)? = null,
 
    /**
-    * Specifies a listener that is notified each time an entry is evicted.
+    * Specifies a listener notified each time an entry is evicted.
     * See full docs at [Caffeine.evictionListener].
     */
    var evictionListener: suspend (K?, V?, RemovalCause) -> Unit = { _, _, _ -> },
 
    /**
-    * Specifies a listener that is notified each time an entry is removed.
+    * Specifies a listener notified each time an entry is removed.
     * See full docs at [Caffeine.removalListener].
     */
    var removalListener: suspend (K?, V?, RemovalCause) -> Unit = { _, _, _ -> },
