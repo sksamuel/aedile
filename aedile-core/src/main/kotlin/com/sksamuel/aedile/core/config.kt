@@ -15,13 +15,20 @@ import kotlin.time.toJavaDuration
 /**
  * Specifies the scheduler to use when scheduling routine maintenance based on an expiration event.
  *
+ * If [maxDelay] is specified, the scheduled delay will be capped to this value. This can be used
+ * to work around a Caffeine issue where in-flight async entries can cause the scheduler to be
+ * invoked with an extremely large delay (due to negative access time calculations), which prevents
+ * timely eviction in low-traffic environments. Setting [maxDelay] to the cache's expiry duration
+ * ensures the scheduler is always invoked within a reasonable time.
+ *
  * See full docs at [Caffeine.scheduler].
  */
-fun <K : Any, V : Any> Caffeine<K, V>.scheduler(scheduler: Scheduler): Caffeine<K, V> {
+fun <K : Any, V : Any> Caffeine<K, V>.scheduler(scheduler: Scheduler, maxDelay: Duration? = null): Caffeine<K, V> {
    return scheduler { _, command, delay, unit ->
+      val duration = unit.toNanos(delay).nanoseconds
       scheduler.schedule(
          { command.run() },
-         unit.toNanos(delay).nanoseconds,
+         if (maxDelay == null) duration else minOf(duration, maxDelay),
       ).asCompletableFuture()
    }
 }

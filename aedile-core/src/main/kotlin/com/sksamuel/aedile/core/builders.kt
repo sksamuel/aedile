@@ -94,8 +94,8 @@ fun <K : Any, V> Caffeine<in K, in V & Any>.asLoadingCache(
          return scope.async { compute(key) }.asCompletableFuture()
       }
 
-      override fun asyncReload(key: K, oldValue: V /* & Any */, executor: Executor): CompletableFuture<out V> {
-         return scope.async { reloadCompute(key, oldValue!!) }.asCompletableFuture()
+      override fun asyncReload(key: K, oldValue: V & Any, executor: Executor): CompletableFuture<out V> {
+         return scope.async { reloadCompute(key, oldValue) }.asCompletableFuture()
       }
    }))
 }
