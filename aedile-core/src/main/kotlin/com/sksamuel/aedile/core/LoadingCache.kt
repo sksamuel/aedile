@@ -5,9 +5,11 @@ import com.github.benmanes.caffeine.cache.AsyncLoadingCache
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.future.asCompletableFuture
 import kotlinx.coroutines.future.asDeferred
 import kotlinx.coroutines.future.await
+import kotlinx.coroutines.future.future
 import java.util.concurrent.CompletableFuture
 import kotlin.coroutines.coroutineContext
 
@@ -66,11 +68,11 @@ class LoadingCache<K : Any, V>(
     *
     * See full docs at [AsyncCache.getAll].
     */
-   suspend fun getAll(keys: Collection<K>, compute: suspend (Set<K>) -> Map<K, V & Any>): Map<K, V & Any> {
-      val scope = CoroutineScope(coroutineContext)
-      @Suppress("UNCHECKED_CAST") // getAll returns CompletableFuture<Map<K, @NonNull V>>
-      return cache.getAll(keys) { k, _ -> scope.async { compute(k.toSet()) }.asCompletableFuture() }.await() as Map<K, V & Any>
-   }
+   suspend fun getAll(keys: Collection<K>, compute: suspend (Set<K>) -> Map<K, V & Any>): Map<K, V & Any> =
+      coroutineScope {
+         @Suppress("UNCHECKED_CAST") // getAll returns CompletableFuture<Map<K, @NonNull V>>
+         cache.getAll(keys) { ks, _ -> future { compute(ks) } }.await() as Map<K, V & Any>
+      }
 
    /**
     * Returns the value associated with a key in this cache, getting that value from the
@@ -86,26 +88,8 @@ class LoadingCache<K : Any, V>(
     *
     * See full docs at [AsyncLoadingCache.get].
     */
-   suspend fun get(key: K, compute: suspend (K) -> V): V {
-
-      val scope = CoroutineScope(coroutineContext)
-      var error: Throwable? = null
-      val value = cache.get(key) { k, _ ->
-         val asCompletableFuture = scope.async {
-            // if compute throws, then it will cause the parent coroutine to be cancelled as well
-            // we don't want that, as want to throw the exception back to the caller.
-            // so we must capture it and throw it manually
-            try {
-               compute(k)
-            } catch (e: Throwable) {
-               error = e
-               null
-            }
-         }.asCompletableFuture()
-         asCompletableFuture.thenApply { it ?: throw error ?: NullPointerException() }
-      }.await()
-      error?.let { throw it }
-      return value
+   suspend fun get(key: K, compute: suspend (K) -> V): V = coroutineScope {
+      cache.get(key) { k, _ -> future { compute(k) } }.await()
    }
 
    /**
