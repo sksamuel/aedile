@@ -18,8 +18,8 @@ jobs:
 
       - uses: actions/setup-java@v4
         with:
-          distribution: 'adopt'
-          java-version: '11'
+          distribution: 'temurin'
+          java-version: '17'
 
       - name: Run tests
         run: ./gradlew check
