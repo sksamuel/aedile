@@ -228,5 +228,13 @@ class AsCacheTest : FunSpec() {
             deferred2.await() shouldBe "value"
          }
       }
+
+      test("should support nullable value type") {
+         val cache = Caffeine.newBuilder().asCache<String, String?>()
+         cache.put("foo", "bar")
+         cache.getIfPresent("foo") shouldBe "bar"
+         cache.get("baz") { null } shouldBe null
+         cache.get("qux") { "value" } shouldBe "value"
+      }
    }
 }
