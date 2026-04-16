@@ -4,8 +4,9 @@ import com.github.benmanes.caffeine.cache.AsyncCache
 import com.github.benmanes.caffeine.cache.AsyncLoadingCache
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.future.asCompletableFuture
 import kotlinx.coroutines.future.asDeferred
 import kotlinx.coroutines.future.await
@@ -68,11 +69,13 @@ class LoadingCache<K : Any, V>(
     *
     * See full docs at [AsyncCache.getAll].
     */
-   suspend fun getAll(keys: Collection<K>, compute: suspend (Set<K>) -> Map<K, V & Any>): Map<K, V & Any> =
-      coroutineScope {
-         @Suppress("UNCHECKED_CAST") // getAll returns CompletableFuture<Map<K, @NonNull V>>
-         cache.getAll(keys) { ks, _ -> future { compute(ks) } }.await() as Map<K, V & Any>
-      }
+   suspend fun getAll(keys: Collection<K>, compute: suspend (Set<K>) -> Map<K, V & Any>): Map<K, V & Any> {
+      val scope = CoroutineScope(coroutineContext.minusKey(Job) + SupervisorJob())
+      @Suppress("UNCHECKED_CAST") // getAll returns CompletableFuture<Map<K, @NonNull V>>
+      return cache.getAll(keys) { ks, _ -> scope.future { compute(ks) } }
+         .thenApply { it }
+         .await() as Map<K, V & Any>
+   }
 
    /**
     * Returns the value associated with a key in this cache, getting that value from the
@@ -88,8 +91,11 @@ class LoadingCache<K : Any, V>(
     *
     * See full docs at [AsyncLoadingCache.get].
     */
-   suspend fun get(key: K, compute: suspend (K) -> V): V = coroutineScope {
-      cache.get(key) { k, _ -> future { compute(k) } }.await()
+   suspend fun get(key: K, compute: suspend (K) -> V): V {
+      val scope = CoroutineScope(coroutineContext.minusKey(Job) + SupervisorJob())
+      return cache.get(key) { k, _ -> scope.future { compute(k) } }
+         .thenApply { it }
+         .await()
    }
 
    /**
