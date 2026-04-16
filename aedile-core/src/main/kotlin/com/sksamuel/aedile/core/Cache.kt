@@ -89,7 +89,8 @@ class Cache<K : Any, V : Any>(
     */
    suspend fun getOrNull(key: K, compute: suspend (K) -> V?): V? {
       val scope = CoroutineScope(coroutineContext)
-      return cache.get(key) { k, _ -> scope.async { compute(k) }.asCompletableFuture() }.await()
+      @Suppress("UNCHECKED_CAST")
+      return cache.get(key) { k, _ -> scope.async { compute(k) }.asCompletableFuture() as CompletableFuture<V> }.await()
    }
 
    /**

@@ -9,7 +9,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlin.time.Duration
 
-data class Configuration<K, V>(
+data class Configuration<K : Any, V : Any>(
 
    /**
     * Sets the [CoroutineDispatcher] that is used when executing default build functions.
