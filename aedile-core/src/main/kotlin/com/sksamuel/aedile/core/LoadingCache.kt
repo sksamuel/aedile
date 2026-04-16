@@ -68,8 +68,22 @@ class LoadingCache<K : Any, V>(
     */
    suspend fun getAll(keys: Collection<K>, compute: suspend (Set<K>) -> Map<K, V & Any>): Map<K, V & Any> {
       val scope = CoroutineScope(coroutineContext)
+      var error: Throwable? = null
       @Suppress("UNCHECKED_CAST") // getAll returns CompletableFuture<Map<K, @NonNull V>>
-      return cache.getAll(keys) { k, _ -> scope.async { compute(k.toSet()) }.asCompletableFuture() }.await() as Map<K, V & Any>
+      return cache.getAll(keys) { k, _ ->
+         // if compute throws, then it will cause the parent coroutine to be cancelled as well
+         // we don't want that, so we capture the error and complete the future exceptionally via
+         // thenApply. This ensures Caffeine auto-evicts the entries rather than cancelling the scope.
+         val future = scope.async {
+            try {
+               compute(k.toSet())
+            } catch (e: Throwable) {
+               error = e
+               null
+            }
+         }.asCompletableFuture()
+         future.thenApply { it ?: throw error ?: NullPointerException() }
+      }.await() as Map<K, V & Any>
    }
 
    /**
@@ -87,10 +101,9 @@ class LoadingCache<K : Any, V>(
     * See full docs at [AsyncLoadingCache.get].
     */
    suspend fun get(key: K, compute: suspend (K) -> V): V {
-
       val scope = CoroutineScope(coroutineContext)
       var error: Throwable? = null
-      val value = cache.get(key) { k, _ ->
+      return cache.get(key) { k, _ ->
          val asCompletableFuture = scope.async {
             // if compute throws, then it will cause the parent coroutine to be cancelled as well
             // we don't want that, as want to throw the exception back to the caller.
@@ -104,8 +117,6 @@ class LoadingCache<K : Any, V>(
          }.asCompletableFuture()
          asCompletableFuture.thenApply { it ?: throw error ?: NullPointerException() }
       }.await()
-      error?.let { throw it }
-      return value
    }
 
    /**

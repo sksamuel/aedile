@@ -55,7 +55,7 @@ class Cache<K : Any, V : Any>(
    suspend fun get(key: K, compute: suspend (K) -> V): V {
       val scope = CoroutineScope(coroutineContext)
       var error: Throwable? = null
-      val value = cache.get(key) { k, _ ->
+      return cache.get(key) { k, _ ->
          val asCompletableFuture = scope.async {
             // if compute throws, then it will cause the parent coroutine to be cancelled as well
             // we don't want that, as want to throw the exception back to the caller.
@@ -69,8 +69,6 @@ class Cache<K : Any, V : Any>(
          }.asCompletableFuture()
          asCompletableFuture.thenApply { it ?: throw error ?: NullPointerException() }
       }.await()
-      error?.let { throw it }
-      return value
    }
 
    /**
