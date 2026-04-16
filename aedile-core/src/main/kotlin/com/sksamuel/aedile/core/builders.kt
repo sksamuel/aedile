@@ -1,5 +1,6 @@
 package com.sksamuel.aedile.core
 
+import com.github.benmanes.caffeine.cache.AsyncCache
 import com.github.benmanes.caffeine.cache.AsyncCacheLoader
 import com.github.benmanes.caffeine.cache.Caffeine
 import kotlinx.coroutines.CoroutineName
@@ -20,7 +21,9 @@ import java.util.concurrent.Executor
  * If the suspendable computation throws or computes a null value, then the
  * entry will be automatically removed.
  */
-fun <K : Any, V : Any> Caffeine<in K, in V>.asCache(): Cache<K, V> = Cache(buildAsync())
+@Suppress("UNCHECKED_CAST")
+fun <K : Any, V> Caffeine<in K, in V & Any>.asCache(): Cache<K, V> =
+   Cache(buildAsync<K, V & Any>() as AsyncCache<K, V>)
 
 /**
  * Returns a [LoadingCache] which uses the provided [compute] function

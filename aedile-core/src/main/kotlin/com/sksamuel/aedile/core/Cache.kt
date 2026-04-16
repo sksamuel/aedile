@@ -13,7 +13,7 @@ import kotlinx.coroutines.future.future
 import java.util.concurrent.CompletableFuture
 import kotlin.coroutines.coroutineContext
 
-class Cache<K : Any, V : Any>(
+class Cache<K : Any, V>(
    private val cache: AsyncCache<K, V>
 ) {
 
@@ -131,11 +131,12 @@ class Cache<K : Any, V : Any>(
       return cache.asMap().mapValues { it.value.asDeferred() }
    }
 
-   suspend fun getAll(keys: Collection<K>, compute: suspend (Collection<K>) -> Map<K, V>): Map<K, V> {
+   @Suppress("UNCHECKED_CAST")
+   suspend fun getAll(keys: Collection<K>, compute: suspend (Collection<K>) -> Map<K, V & Any>): Map<K, V & Any> {
       val scope = CoroutineScope(coroutineContext.minusKey(Job) + SupervisorJob())
       return cache.getAll(keys) { ks, _ -> scope.future { compute(ks) } }
          .thenApply { it }
-         .await()
+         .await() as Map<K, V & Any>
    }
 
    /**
