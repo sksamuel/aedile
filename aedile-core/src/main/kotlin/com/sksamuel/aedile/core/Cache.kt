@@ -144,21 +144,20 @@ class Cache<K : Any, V : Any>(
    suspend fun getAll(keys: Collection<K>, compute: suspend (Collection<K>) -> Map<K, V>): Map<K, V> {
       val scope = CoroutineScope(coroutineContext)
       var error: Throwable? = null
-      val value = cache.getAll(keys) { ks: Set<K>, _: Executor ->
-         scope.async {
-            // if compute throws, then it will cause the parent coroutine to be cancelled as well
-            // we don't want that, as want to throw the exception back to the caller.
-            // so we must capture it and throw it manually
+      return cache.getAll(keys) { ks: Set<K>, _: Executor ->
+         // if compute throws, then it will cause the parent coroutine to be cancelled as well
+         // we don't want that, so we capture the error and complete the future exceptionally via
+         // thenApply. This ensures Caffeine auto-evicts the entries rather than caching a stale result.
+         val future = scope.async {
             try {
                compute(ks)
             } catch (e: Throwable) {
                error = e
-               emptyMap()
+               null
             }
          }.asCompletableFuture()
+         future.thenApply { it ?: throw error ?: NullPointerException() }
       }.await()
-      error?.let { throw it }
-      return value
    }
 
    /**
