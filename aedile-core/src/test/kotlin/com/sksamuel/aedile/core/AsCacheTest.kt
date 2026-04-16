@@ -6,7 +6,14 @@ import io.kotest.assertions.nondeterministic.eventually
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.Channel.Factory.UNLIMITED
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.supervisorScope
+import kotlinx.coroutines.withContext
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
@@ -187,6 +194,39 @@ class AsCacheTest : FunSpec() {
          cache.getOrNull("foo") { "bar" } shouldBe "bar"
          cache.getOrNull("foo") { error("kapow") }
          cache.getOrNull("foo") shouldBe "bar"
+      }
+
+      test("cancelling one caller should not cancel other callers sharing the same in-flight compute") {
+         val cache = Caffeine.newBuilder().asCache<String, String>()
+         val loaderStarted = Channel<Unit>(UNLIMITED)
+         val loaderCanProceed = Channel<Unit>(UNLIMITED)
+         val secondCallerReady = Channel<Unit>(UNLIMITED)
+         val job1 = Job()
+
+         supervisorScope {
+            val deferred1 = async {
+               withContext(job1) {
+                  cache.get("key") {
+                     loaderStarted.send(Unit)
+                     loaderCanProceed.receive()
+                     "value"
+                  }
+               }
+            }
+
+            val deferred2 = async {
+               loaderStarted.receive()
+               secondCallerReady.send(Unit)
+               cache.get("key") { "value" }
+            }
+
+            secondCallerReady.receive()
+            job1.cancel()
+            loaderCanProceed.send(Unit)
+
+            shouldThrow<CancellationException> { deferred1.await() }
+            deferred2.await() shouldBe "value"
+         }
       }
    }
 }

@@ -3,8 +3,9 @@ package com.sksamuel.aedile.core
 import com.github.benmanes.caffeine.cache.AsyncCache
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.future.asCompletableFuture
 import kotlinx.coroutines.future.asDeferred
 import kotlinx.coroutines.future.await
@@ -53,8 +54,14 @@ class Cache<K : Any, V : Any>(
     * @return the present value, the computed value, or throws.
     *
     */
-   suspend fun get(key: K, compute: suspend (K) -> V): V = coroutineScope {
-      cache.get(key) { k, _ -> future { compute(k) } }.await()
+   suspend fun get(key: K, compute: suspend (K) -> V): V {
+      val scope = CoroutineScope(coroutineContext.minusKey(Job) + SupervisorJob())
+      // thenApply gives each caller a private CompletableFuture. Cancelling it (which
+      // CompletableFuture.await() does on coroutine cancellation) does not cancel the
+      // shared source future that Caffeine deduplicates across concurrent callers.
+      return cache.get(key) { k, _ -> scope.future { compute(k) } }
+         .thenApply { it }
+         .await()
    }
 
    /**
@@ -124,8 +131,11 @@ class Cache<K : Any, V : Any>(
       return cache.asMap().mapValues { it.value.asDeferred() }
    }
 
-   suspend fun getAll(keys: Collection<K>, compute: suspend (Collection<K>) -> Map<K, V>): Map<K, V> = coroutineScope {
-      cache.getAll(keys) { ks, _ -> future { compute(ks) } }.await()
+   suspend fun getAll(keys: Collection<K>, compute: suspend (Collection<K>) -> Map<K, V>): Map<K, V> {
+      val scope = CoroutineScope(coroutineContext.minusKey(Job) + SupervisorJob())
+      return cache.getAll(keys) { ks, _ -> scope.future { compute(ks) } }
+         .thenApply { it }
+         .await()
    }
 
    /**
