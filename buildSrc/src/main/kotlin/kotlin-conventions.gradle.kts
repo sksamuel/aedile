@@ -41,7 +41,7 @@ tasks.compileTestKotlin {
 dependencies {
    testImplementation(kotlin("stdlib"))
 
-   val kotest = "6.2.6"
+   val kotest = "6.2.7"
    testImplementation("io.kotest:kotest-runner-junit5:$kotest")
    testImplementation("io.kotest:kotest-assertions-core:$kotest")
    testImplementation("io.kotest:kotest-assertions-json:$kotest")
